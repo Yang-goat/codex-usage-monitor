@@ -1,6 +1,6 @@
 // Runs only in the local Codex renderer; no remote scripts or network requests.
 (() => {
-  const version='0.1.0';
+  const version='0.1.1';
   if (window.__codexComposerMeter?.state().version===version) return;
   window.__codexComposerMeter?.destroy();
   const id = 'codex-composer-meter';
@@ -43,11 +43,18 @@
   document.addEventListener('pointerdown', outside); document.addEventListener('keydown', key);
   let data = null, lastThread = null, binding = null, hiddenReason='no-agent-composer';
   const norm = x => typeof x === 'string' ? x.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i)?.[0]?.toLowerCase() ?? null : null;
+  function isDotSurface() {
+    const url=new URL(window.location.href);
+    return [url.pathname,url.searchParams.get('initialRoute')].includes('/spotlight');
+  }
   function resolveComposer() {
+    // Dot reuses the agent composer in its dedicated Spotlight window.
+    if(isDotSurface())return null;
     // ChatGPT Work and Codex share the agent composer; plain ChatGPT Chat uses
     // data-chatgpt-composer. Cached, hidden tabs must never supply the active ID.
+    // Dot's main-window messaging composer also shares the agent root marker.
     const candidates=[...document.querySelectorAll('[data-codex-composer-root] [data-composer-footer-responsive]')]
-      .filter(visible).filter(footer=>!footer.closest('[data-chatgpt-composer]'))
+      .filter(visible).filter(footer=>!footer.closest('[data-chatgpt-composer],.messaging-root,[data-role="composer"]'))
       .map(footer=>({footer,composer:footer.closest('[data-codex-composer-root]')}));
     candidates.sort((a,b)=>Number(b.composer.contains(document.activeElement))-Number(a.composer.contains(document.activeElement))||b.footer.getBoundingClientRect().bottom-a.footer.getBoundingClientRect().bottom);
     const selected=candidates[0];
@@ -86,7 +93,7 @@
     binding=resolveComposer();
     const current=binding?.threadId??null;
     if (current !== lastThread) { data = null; close(); lastThread = current; paint(); }
-    if (!binding) { hiddenReason='no-agent-composer';root.style.display = 'none';close();return; }
+    if (!binding) { hiddenReason=isDotSurface()?'dot-surface':'no-agent-composer';root.style.display = 'none';close();return; }
     const {footer}=binding;
     if (!root.isConnected) document.body.append(root);
     const gap=controlGap(footer);
