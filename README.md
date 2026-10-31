@@ -4,9 +4,13 @@
 
 目前支持 **Windows 10/11、简体中文界面**，适配 Windows 商店版 Codex。通过本地调试接口临时挂载界面，不改写客户端程序包。
 
-![状态条与明细示意，使用模拟数据](docs/images/preview.svg)
+![真实客户端中的状态条](docs/images/status-bar.png)
 
-图中并列展示两种明细样式，实际操作时一次只展开一个。
+| Token 明细 | 上下文明细 |
+| --- | --- |
+| <img src="docs/images/token-details.png" width="210" alt="真实 Token 明细"> | <img src="docs/images/context-details.png" width="210" alt="真实上下文明细"> |
+
+截图来自真实客户端，仅截取监控组件；数字是截图时的实际使用值。图中分别展示两种明细，实际操作时一次只展开一个。
 
 ## 能做什么
 
