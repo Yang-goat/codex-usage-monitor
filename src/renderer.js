@@ -1,6 +1,6 @@
 // Runs only in the local Codex renderer; no remote scripts or network requests.
 (() => {
-  const version='0.3.0';
+  const version='0.1.0';
   if (window.__codexComposerMeter?.state().version===version) return;
   window.__codexComposerMeter?.destroy();
   const id = 'codex-composer-meter';

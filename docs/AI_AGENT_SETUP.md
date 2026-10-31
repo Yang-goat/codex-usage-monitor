@@ -11,7 +11,7 @@ https://github.com/Yang-goat/codex-usage-monitor
 先读取 README.md、AGENTS.md 以及 scripts/Common.ps1、Install.ps1、Start.ps1、Uninstall.ps1，然后执行：
 
 1. 记录 Windows、PowerShell、Node.js 与 Codex 安装状态。需要 Node.js 22+。保留现有 Python、Node 与其他项目环境；缺少依赖时说明缺项和安装方式。
-2. clone 到适合长期保留的独立目录，或下载 GitHub Code → Download ZIP 的源码后解压。不使用临时目录，不覆盖现有项目。已有 clone 时先检查 git status 再决定如何更新。
+2. 优先下载仓库最新正式 Release 的 Windows ZIP 和 SHA256SUMS.txt，核对 SHA-256 后解压到适合长期保留的独立目录；没有 Release 时再 clone 源码。不使用临时目录，不覆盖现有项目。已有 clone 时先检查 git status 再决定如何更新。
 3. 本项目无 npm 生产依赖，不运行不必要的 npm install。执行：
    powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Start.ps1 -CheckOnly
 4. 自动发现失败时，用实际路径设置 -AppPath / -NodePath / -CliPath；AppPath 必须是桌面 ChatGPT.exe 或 Codex.exe，不能是 CLI codex.exe。CLI 缺失可以继续安装，仅实时额度可能不可用。

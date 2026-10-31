@@ -22,6 +22,13 @@ async function walk(dir){
  }
 }
 await walk(root);
+const metadata=JSON.parse(await fs.readFile(path.join(root,'package.json'),'utf8'));
+const lockfile=JSON.parse(await fs.readFile(path.join(root,'package-lock.json'),'utf8'));
+const renderer=await fs.readFile(path.join(root,'src','renderer.js'),'utf8');
+const quota=await fs.readFile(path.join(root,'src','quota.mjs'),'utf8');
+if(lockfile.version!==metadata.version||lockfile.packages?.['']?.version!==metadata.version)failures.push('package-lock.json: 版本与 package.json 不一致');
+if(renderer.match(/const version='([^']+)'/)?.[1]!==metadata.version)failures.push('src/renderer.js: 注入版本与 package.json 不一致');
+if(quota.match(/version:'([^']+)'/)?.[1]!==metadata.version)failures.push('src/quota.mjs: CLI 客户端版本与 package.json 不一致');
 const tracked=spawnSync('git',['-c','core.longpaths=true','ls-files','-z'],{cwd:root,encoding:'utf8'});
 if(tracked.status===0)for(const file of tracked.stdout.split('\0').filter(Boolean))if(/^(runtime|node_modules|\.codex|\.agents)\//.test(file))failures.push(`${file}: 本机目录已被 Git 跟踪`);
 if(failures.length){console.error(failures.join('\n'));process.exitCode=1;}else console.log(`发布检查通过：${count} 个源文件；没有匹配到开发机路径、凭据或本机资料。`);

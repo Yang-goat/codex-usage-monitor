@@ -4,6 +4,8 @@
 
 目前支持 **Windows 10/11、简体中文界面**，适配 Windows 商店版 Codex。通过本地调试接口临时挂载界面，不改写客户端程序包。
 
+**首个正式版本：[v0.1.0](https://github.com/Yang-goat/codex-usage-monitor/releases/tag/v0.1.0)** · [下载 Windows ZIP](https://github.com/Yang-goat/codex-usage-monitor/releases/download/v0.1.0/codex-usage-monitor-v0.1.0-windows.zip) · [SHA-256 校验文件](https://github.com/Yang-goat/codex-usage-monitor/releases/download/v0.1.0/SHA256SUMS.txt)。ZIP 是源码运行包，需要 Node.js 22+。
+
 ![真实客户端中的状态条](docs/images/status-bar.png)
 
 | Token 明细 | 上下文明细 |
@@ -45,7 +47,7 @@ https://github.com/Yang-goat/codex-usage-monitor
 
 请先读取仓库 README.md、AGENTS.md 和 scripts/ 下的安装、启动、卸载脚本，再执行：
 1. 检查 Windows、PowerShell、Node.js 22+ 和 Codex 桌面端。保留现有环境；缺少依赖时说明缺项和安装方式。
-2. 将仓库 clone 到适合长期保留的独立目录，不用临时目录，不覆盖已有项目。已有此仓库时先检查本地改动再更新。
+2. 优先下载仓库最新正式 Release 的 Windows ZIP 和 SHA256SUMS.txt，核对 SHA-256 后解压到长期保留的独立目录；没有 Release 时再 clone 源码。不用临时目录，不覆盖已有项目。已有 clone 时先检查本地改动再更新。
 3. 不需要 npm install。运行 scripts/Start.ps1 -CheckOnly 做只读发现，随后执行 scripts/Install.ps1。
 4. 优先接入已核实的桌面 Codex 图标。安装器会备份原快捷方式。若现有图标无法核实，不覆盖；改用未占用的 Codex 用量监控.lnk 作为 -ShortcutPath。
 5. 客户端或 Node 无法自动发现时，用 -AppPath / -NodePath 指定真实路径；不要把 CLI codex.exe 当成桌面客户端。
@@ -58,12 +60,16 @@ https://github.com/Yang-goat/codex-usage-monitor
 
 ### 方式二：手动安装
 
-打开 PowerShell，将下面的目录替换成你准备长期保留代码的位置：
+从 [Releases](https://github.com/Yang-goat/codex-usage-monitor/releases/latest) 下载 Windows ZIP 与 `SHA256SUMS.txt`。在 PowerShell 中核对下载的 ZIP：
 
 ```powershell
-git clone https://github.com/Yang-goat/codex-usage-monitor.git
-cd codex-usage-monitor
+Get-FileHash -Algorithm SHA256 .\codex-usage-monitor-v0.1.0-windows.zip
+Get-Content .\SHA256SUMS.txt
+```
 
+确认哈希一致后，解压到长期保留的目录，进入解压后的项目目录执行：
+
+```powershell
 # 只读检查安装路径和运行状态
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Start.ps1 -CheckOnly
 
@@ -73,7 +79,14 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install.ps1
 
 `-ExecutionPolicy Bypass` 仅用于这次 PowerShell 进程，不修改系统执行策略。安装不需要管理员权限。
 
-如果没有 Git，可以在仓库的 **Code → Download ZIP** 下载源码，解压到长期目录后执行上述两个脚本。
+也可通过 Git 获取源码，再执行上述两个脚本：
+
+```powershell
+git clone https://github.com/Yang-goat/codex-usage-monitor.git
+cd codex-usage-monitor
+```
+
+使用 Release ZIP 安装不需要 Git。
 
 ### 自定义路径与端口
 
@@ -120,7 +133,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install.ps1 `
 
 ## 更新与卸载
 
-更新前先退出 Codex，保留 `runtime/`：它包含原快捷方式备份和安装记录。
+更新前先退出 Codex，保留 `runtime/`：它包含原快捷方式备份和安装记录。通过 Git 安装的用户可在原目录更新：
 
 ```powershell
 git status
@@ -129,6 +142,8 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install.ps1
 ```
 
 有未提交修改时先自行处理，避免覆盖。保持安装目录位置不变；需要移动目录时，先在旧位置卸载，再移动和重新安装。
+
+通过 ZIP 安装的用户，建议先在旧目录运行卸载脚本，再将新版本解压到长期目录并重新安装。保留旧目录中的备份，确认更新成功后再自行整理。
 
 卸载：
 
@@ -169,6 +184,8 @@ npm.cmd run check:release
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\scripts.test.ps1
 npm.cmd run preview
 ```
+
+发布前提交全部修改，再运行 `npm.cmd run build:release`。打包脚本从已提交的 Git 源码创建 `dist/release/v<版本>/` 下的 Windows ZIP、`SHA256SUMS.txt` 和本地构建清单；不会打包 `.git/`、未跟踪文件或 `runtime/`。发布说明见 [v0.1.0](docs/releases/v0.1.0.md)，历史变化见 [CHANGELOG](CHANGELOG.md)。
 
 预览页位于 `http://127.0.0.1:9841`，只使用模拟数据。支持切换 Codex、Work、普通聊天和深浅色，不读取真实聊天。界面源码在 `src/renderer.js`；每次改变注入界面时同时更新渲染器版本，运行中的新版辅助进程会检测源文件变化。
 
