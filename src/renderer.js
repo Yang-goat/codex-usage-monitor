@@ -1,6 +1,6 @@
 // Runs only in the local Codex renderer; no remote scripts or network requests.
 (() => {
-  const version='0.1.1';
+  const version='0.1.2';
   if (window.__codexComposerMeter?.state().version===version) return;
   window.__codexComposerMeter?.destroy();
   const id = 'codex-composer-meter';
@@ -52,11 +52,11 @@
     if(isDotSurface())return null;
     // ChatGPT Work and Codex share the agent composer; plain ChatGPT Chat uses
     // data-chatgpt-composer. Cached, hidden tabs must never supply the active ID.
-    // Dot's main-window messaging composer also shares the agent root marker.
+    // Dot and side panels share this marker. Bind only the main chat, regardless of focus.
     const candidates=[...document.querySelectorAll('[data-codex-composer-root] [data-composer-footer-responsive]')]
-      .filter(visible).filter(footer=>!footer.closest('[data-chatgpt-composer],.messaging-root,[data-role="composer"]'))
+      .filter(visible).filter(footer=>!footer.closest('[data-chatgpt-composer],.messaging-root,[data-role="composer"],[data-tab-id^="sidechat:"],[data-app-shell-focus-area="right-panel"]'))
       .map(footer=>({footer,composer:footer.closest('[data-codex-composer-root]')}));
-    candidates.sort((a,b)=>Number(b.composer.contains(document.activeElement))-Number(a.composer.contains(document.activeElement))||b.footer.getBoundingClientRect().bottom-a.footer.getBoundingClientRect().bottom);
+    candidates.sort((a,b)=>b.footer.getBoundingClientRect().bottom-a.footer.getBoundingClientRect().bottom);
     const selected=candidates[0];
     if(!selected)return null;
     const direct=selected.composer.querySelector('[data-above-composer-conversation-id]');

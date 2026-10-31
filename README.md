@@ -1,10 +1,10 @@
 # Codex 用量监控
 
-在 **Codex 模式和 ChatGPT Work 的输入框底部**显示当前聊天的 token、缓存命中率、上下文占用、账号剩余额度和重置倒计时。普通 ChatGPT 聊天、Dot 主窗口对话及快捷小窗自动隐藏。
+在 **Codex 模式和 ChatGPT Work 的主聊天输入框底部**显示当前聊天的 token、缓存命中率、上下文占用、账号剩余额度和重置倒计时。侧边聊天、普通 ChatGPT 聊天、Dot 主窗口对话及快捷小窗隐藏，输入焦点切换不改变统计归属。
 
 目前支持 **Windows 10/11、简体中文界面**，适配 Windows 商店版 Codex。通过本地调试接口临时挂载界面，不改写客户端程序包。
 
-**最新正式版本：[v0.1.1](https://github.com/Yang-goat/codex-usage-monitor/releases/tag/v0.1.1)** · [下载 Windows ZIP](https://github.com/Yang-goat/codex-usage-monitor/releases/download/v0.1.1/codex-usage-monitor-v0.1.1-windows.zip) · [SHA-256 校验文件](https://github.com/Yang-goat/codex-usage-monitor/releases/download/v0.1.1/SHA256SUMS.txt)。ZIP 是源码运行包，需要 Node.js 22+。
+**最新正式版本：[v0.1.2](https://github.com/Yang-goat/codex-usage-monitor/releases/tag/v0.1.2)** · [下载 Windows ZIP](https://github.com/Yang-goat/codex-usage-monitor/releases/download/v0.1.2/codex-usage-monitor-v0.1.2-windows.zip) · [SHA-256 校验文件](https://github.com/Yang-goat/codex-usage-monitor/releases/download/v0.1.2/SHA256SUMS.txt)。ZIP 是源码运行包，需要 Node.js 22+。
 
 ![真实客户端中的状态条](docs/images/status-bar.png)
 
@@ -20,7 +20,7 @@
 - 点击 `数值 tok`，展开累计、输入、输出、推理、缓存输入明细。
 - 点击“上下文”，展开已用 token、剩余 token 和窗口上限。
 - 明细使用 K/M/B 缩写，悬停查看完整整数；点击外部或按 Esc 收起。
-- 自动跟随当前可见聊天，避开隐藏标签页的缓存，不串用其他聊天数据。
+- 绑定当前可见主聊天，排除侧边聊天与隐藏标签页缓存；侧边输入框聚焦时仍显示主聊天统计。
 - 将已有桌面 Codex 图标接入启动器；没有图标时创建一个。以后只点这个图标，客户端与监控一起启动。
 - 客户端完全退出后，辅助进程约 12 秒内自动退出；没有注册开机常驻项、系统服务或计划任务。
 
@@ -63,7 +63,7 @@ https://github.com/Yang-goat/codex-usage-monitor
 从 [Releases](https://github.com/Yang-goat/codex-usage-monitor/releases/latest) 下载 Windows ZIP 与 `SHA256SUMS.txt`。在 PowerShell 中核对下载的 ZIP：
 
 ```powershell
-Get-FileHash -Algorithm SHA256 .\codex-usage-monitor-v0.1.1-windows.zip
+Get-FileHash -Algorithm SHA256 .\codex-usage-monitor-v0.1.2-windows.zip
 Get-Content .\SHA256SUMS.txt
 ```
 
@@ -185,7 +185,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\scripts.test.ps1
 npm.cmd run preview
 ```
 
-发布前提交全部修改，再运行 `npm.cmd run build:release`。打包脚本从已提交的 Git 源码创建 `dist/release/v<版本>/` 下的 Windows ZIP、`SHA256SUMS.txt` 和本地构建清单；不会打包 `.git/`、未跟踪文件或 `runtime/`。发布说明见 [v0.1.1](docs/releases/v0.1.1.md)，历史变化见 [CHANGELOG](CHANGELOG.md)。
+发布前提交全部修改，再运行 `npm.cmd run build:release`。打包脚本从已提交的 Git 源码创建 `dist/release/v<版本>/` 下的 Windows ZIP、`SHA256SUMS.txt` 和本地构建清单；不会打包 `.git/`、未跟踪文件或 `runtime/`。发布说明见 [v0.1.2](docs/releases/v0.1.2.md)，历史变化见 [CHANGELOG](CHANGELOG.md)。
 
 预览页位于 `http://127.0.0.1:9841`，只使用模拟数据。支持切换 Codex、Work、普通聊天、Dot 和深浅色，不读取真实聊天。界面源码在 `src/renderer.js`；每次改变注入界面时同时更新渲染器版本，运行中的新版辅助进程会检测源文件变化。
 
@@ -199,6 +199,8 @@ runtime/               本机运行资料与原图标备份（忽略上传）
 ```
 
 独立浏览器回归函数为 `tools/check-dot-surface.mjs`。在已有 Playwright 环境中传入独立 `page`、预览 HTML 和渲染器文本，可检查主窗口 Dot 容器排除、快捷窗路由排除及返回普通聊天后的恢复；可选传入旧版渲染器以复现问题和验证热替换。检查只使用模拟页面，不连接真实客户端。
+
+主/侧聊天绑定检查为 `tools/check-main-only.mjs`，可在独立 Playwright 页面中验证焦点切换、侧边容器排除、统计来源和主聊天 ID 缺失等场景。侧边聊天可能是没有落盘日志的临时分支，当前版本只展示主聊天的 token、上下文和账号共享额度。
 
 ## 参考与许可
 

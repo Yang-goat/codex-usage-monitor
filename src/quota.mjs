@@ -17,6 +17,6 @@ export async function readQuota(executable = 'codex') {
       if(r.id===1){if(r.error){finish(null);return;}send({method:'initialized'});send({id:2,method:'account/rateLimits/read'});}
       if(r.id===2) finish(r.error?null:normalizeLimits(r.result));
     });
-    send({id:1,method:'initialize',params:{clientInfo:{name:'codex_usage_monitor',title:'Codex 用量监控',version:'0.1.1'},capabilities:{experimentalApi:true}}});
+    send({id:1,method:'initialize',params:{clientInfo:{name:'codex_usage_monitor',title:'Codex 用量监控',version:'0.1.2'},capabilities:{experimentalApi:true}}});
   });
 }
