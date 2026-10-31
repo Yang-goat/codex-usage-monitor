@@ -1,0 +1,17 @@
+{
+  "name": "codex-usage-monitor",
+  "version": "0.3.0",
+  "private": true,
+  "description": "在 Codex 和 ChatGPT Work 输入框中显示聊天 token、上下文占用与账号额度。",
+  "license": "MIT",
+  "type": "module",
+  "repository": { "type": "git", "url": "https://github.com/Yang-goat/codex-usage-monitor.git" },
+  "bugs": { "url": "https://github.com/Yang-goat/codex-usage-monitor/issues" },
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "start": "node src/main.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "preview": "node tools/preview.mjs",
+    "check:release": "node tools/check-release.mjs"
+  }
+}

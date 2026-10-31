@@ -1,0 +1,9 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { usageFromEvent,normalizeLimits,normalizeId,countdown } from '../src/metrics.mjs';
+const event={type:'event_msg',payload:{type:'token_count',info:{total_token_usage:{input_tokens:1000,cached_input_tokens:750,output_tokens:100,reasoning_output_tokens:40,total_tokens:1100},last_token_usage:{total_tokens:500},model_context_window:2000}}};
+test('input/cache and output/reasoning are not double counted',()=>{const u=usageFromEvent(event);assert.equal(u.total,1100);assert.equal(u.cacheRate,75);assert.equal(u.contextPercent,25);assert.equal(u.reasoning,40);});
+test('unknown metrics stay unknown',()=>{const u=usageFromEvent({type:'event_msg',payload:{type:'token_count',info:{total_token_usage:{}}}});assert.equal(u.cacheRate,null);assert.equal(u.total,null);assert.equal(u.contextPercent,null);assert.equal(usageFromEvent({}),null);});
+test('multi-bucket account source prefers codex',()=>{const q=normalizeLimits({rateLimits:{primary:{usedPercent:5}},rateLimitsByLimitId:{codex:{primary:{usedPercent:73,windowDurationMins:10080,resetsAt:2000000000}},other:{primary:{usedPercent:1}}}},123);assert.equal(q.windows[0].remaining,27);assert.equal(q.observedAt,123);});
+test('snake-case snapshots and empty quotas',()=>{assert.equal(normalizeLimits({rate_limits:{primary:{used_percent:0,window_minutes:300,resets_at:2000000000}}}).windows[0].remaining,100);assert.equal(normalizeLimits({rateLimits:{primary:{usedPercent:null}}}),null);assert.equal(normalizeLimits({}),null);});
+test('identifiers and reset boundaries',()=>{const id='00000000-0000-0000-0000-000000000002';assert.equal(normalizeId('local:'+id),id);assert.equal(normalizeId('bad'),null);assert.equal(countdown(100,100001),'待刷新');assert.equal(countdown(null),'—');});
