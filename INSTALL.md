@@ -1,6 +1,6 @@
 # Codex Usage Monitor · 安装 / Installation
 
-[中文文档](https://github.com/Yang-goat/codex-usage-monitor#readme) · [English documentation](https://github.com/Yang-goat/codex-usage-monitor/blob/main/README.en.md)
+[中文文档](https://github.com/Yang-goat/codex-usage-monitor/blob/main/README.zh-CN.md) · [English documentation](https://github.com/Yang-goat/codex-usage-monitor#readme)
 
 ## 简体中文
 
