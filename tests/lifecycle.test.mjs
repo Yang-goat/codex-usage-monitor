@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { probeInstance, instancePipe } from '../src/instance.mjs';
 
 const project = fileURLToPath(new URL('../', import.meta.url));
+const mockReleaseFetch = `--import=${new URL('./fixtures/mock-release-fetch.mjs', import.meta.url).href}`;
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 async function until(fn, timeout = 8000) {
   const end = Date.now() + timeout;
@@ -27,7 +28,7 @@ async function fixture(t) {
   const start = (port, extra = {}) => {
     const child = spawn(process.execPath, [path.join(root, 'src', 'main.mjs')], {
       windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'],
-      env: { ...process.env, CODEX_METER_RUNTIME: '', CODEX_HOME: path.join(root, 'home'), CODEX_METER_PORT: String(port), CODEX_METER_CLIENT_PID: '', ...extra },
+      env: { ...process.env, NODE_OPTIONS: [process.env.NODE_OPTIONS, mockReleaseFetch].filter(Boolean).join(' '), CODEX_METER_RUNTIME: '', CODEX_HOME: path.join(root, 'home'), CODEX_METER_PORT: String(port), CODEX_METER_CLIENT_PID: '', ...extra },
     });
     child.output = ''; child.stdout.on('data', d => child.output += d); child.stderr.on('data', d => child.output += d);
     children.push(child); return child;
@@ -36,7 +37,8 @@ async function fixture(t) {
     for (const child of children) if (child.exitCode === null) child.kill();
     await Promise.all(children.map(c => until(() => c.exitCode !== null || c.signalCode !== null).catch(() => {})));
   });
-  return { root, start, children, metadata: () => fs.readFile(path.join(root, 'runtime', 'meter.lock'), 'utf8').then(JSON.parse) };
+  const releaseChecks = async () => (await fs.readFile(path.join(root, 'home', 'release-checks.log'), 'utf8')).trim().split('\n').map(Number);
+  return { root, start, children, releaseChecks, metadata: () => fs.readFile(path.join(root, 'runtime', 'meter.lock'), 'utf8').then(JSON.parse) };
 }
 async function stop(f) {
   const metadata = await f.metadata();
@@ -56,6 +58,7 @@ test('concurrent helpers: one owner; duplicate cannot overwrite or remove its me
   await until(() => duplicate.exitCode !== null);
   assert.equal(duplicate.exitCode, 0);
   assert.deepEqual(await f.metadata(), before);
+  assert.deepEqual(await f.releaseChecks(), [info.pid]);
   await stop(f);
   assert.equal(await fs.stat(path.join(f.root, 'runtime', 'meter.lock')).catch(() => null), null);
 });
@@ -177,5 +180,6 @@ test('restart control waits for old PID exit, creates one replacement, and rejec
   const duplicate = f.start(19439);
   await until(() => duplicate.exitCode !== null);
   assert.equal((await probeInstance(f.root)).pid, next.pid);
+  assert.deepEqual(await f.releaseChecks(), [first.pid, next.pid]);
   await stop(f);
 });

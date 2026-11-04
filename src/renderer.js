@@ -1,7 +1,9 @@
 // Runs only in the local Codex renderer; no remote scripts or network requests.
 (() => {
   const version='0.1.4';
-  if (window.__codexComposerMeter?.state().version===version) return;
+  const revision=3;
+  const installed=window.__codexComposerMeter?.state();
+  if (installed?.version===version && installed.revision===revision) return;
   window.__codexComposerMeter?.destroy();
   const id = 'codex-composer-meter';
   const root = document.createElement('div'); root.id = id;
@@ -15,17 +17,22 @@
     .total:hover,.total:focus-visible,.context:hover,.context:focus-visible,.settings:hover,.settings:focus-visible { background:rgba(128,128,128,.12); outline:1px solid rgba(128,128,128,.3); }
     .settings { display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; flex-shrink:0; }
     .settings svg { width:13px; height:13px; }
-    .panel.settings-panel { left:auto; right:0; transform:none; width:220px; max-width:calc(100vw - 24px); }
-    .process-actions { display:flex; gap:8px; margin-top:12px; }
-    .process-actions button { flex:1; border:1px solid rgba(128,128,128,.28); background:transparent; padding:6px 10px; border-radius:6px; }
-    .process-actions button:hover:enabled { background:rgba(128,128,128,.12); }
-    .process-actions button:disabled { opacity:.45; cursor:default; }
+    .panel.settings-panel { left:auto; right:0; transform:none; width:220px; max-width:calc(100vw - 24px); padding-bottom:8px; }
+    .settings-header { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:8px; }
+    .settings-header .heading { margin:0; white-space:nowrap; }
+    .settings-version { margin-left:5px; font-size:10px; font-weight:400; }
+    .update-control { min-width:0; text-align:right; font-size:10px; overflow-wrap:anywhere; }
+    .process-actions { display:flex; justify-content:space-between; gap:8px; margin-top:8px; }
+    .process-actions button,.update-control button { border:1px solid rgba(128,128,128,.28); background:transparent; }
+    .process-actions button { flex:0 1 80px; padding:3px 8px; border-radius:6px; }
+    .update-control button { padding:2px 6px; border-radius:4px; white-space:nowrap; }
+    .process-actions button:hover:enabled,.update-control button:hover:enabled { background:rgba(128,128,128,.12); }
+    .process-actions button:disabled,.update-control button:disabled { opacity:.45; cursor:default; }
     .process-actions [data-action="stop"] { color:#c54747; }
-    .process-feedback,.update-feedback { margin-top:8px; font-size:11px; }
+    .process-feedback { margin-top:8px; font-size:11px; }
     .process-feedback:empty,.update-feedback:empty { display:none; }
-    .update-actions { margin-top:8px; }
-    .update-actions button { padding-block:4px; }
-    .update-link { display:block; margin-top:4px; color:inherit; text-decoration:underline; }
+    .update-feedback,.update-link { margin-top:3px; }
+    .update-link { display:block; color:inherit; text-decoration:underline; }
     .update-link[hidden] { display:none; }
     strong { font-weight:600; font-variant-numeric:tabular-nums; color:var(--text-primary,#31363d); }
     .dim { opacity:.75; } .warn { color:#b7791f; } .high { color:#c54747; }
@@ -47,8 +54,15 @@
   <div class="item"><dt>剩余 token</dt><dd data-context-detail="remaining">—</dd></div>
   <div class="item"><dt>窗口上限</dt><dd data-context-detail="window">—</dd></div>
   </dl></section>
-  <section class="panel settings-panel" id="process-details" hidden aria-label="状态条设置"><div class="heading">状态条设置</div><dl>
-  <div class="item"><dt>当前版本</dt><dd>v${version}</dd></div>
+  <section class="panel settings-panel" id="process-details" hidden aria-label="状态条设置">
+  <div class="settings-header">
+    <div class="heading">状态条设置<span class="settings-version">v${version}</span></div>
+    <div class="update-control">
+      <button type="button" data-action="check-update" disabled>检查更新</button>
+      <div class="update-feedback" role="status" aria-live="polite"></div>
+      <a class="update-link" target="_blank" rel="noopener noreferrer" hidden>前往 GitHub 下载</a>
+    </div>
+  </div><dl>
   <div class="item"><dt>辅助进程</dt><dd data-process="name">—</dd></div>
   <div class="item"><dt>进程 PID</dt><dd data-process="pid">—</dd></div>
   <div class="item"><dt>调试端口</dt><dd data-process="endpoint">—</dd></div>
@@ -57,10 +71,7 @@
   <div class="item"><dt>运行时间</dt><dd data-process="uptime">—</dd></div>
   </dl>
   <div class="process-actions"><button type="button" data-action="stop" disabled>立即关闭</button><button type="button" data-action="restart" disabled>重启</button></div>
-  <div class="process-feedback" role="status" aria-live="polite"></div>
-  <div class="process-actions update-actions"><button type="button" data-action="check-update" disabled>检查更新</button></div>
-  <div class="update-feedback" role="status" aria-live="polite"></div>
-  <a class="update-link" target="_blank" rel="noopener noreferrer" hidden>前往 GitHub 下载</a></section>`;
+  <div class="process-feedback" role="status" aria-live="polite"></div></section>`;
   const toggles = [...shadow.querySelectorAll('button[aria-controls]')];
   function close() { for(const button of toggles){shadow.getElementById(button.getAttribute('aria-controls')).hidden=true;button.setAttribute('aria-expanded','false');} }
   for(const button of toggles) button.addEventListener('click',()=>{
@@ -75,7 +86,7 @@
   const updateFeedback=shadow.querySelector('.update-feedback');
   const updateLink=shadow.querySelector('.update-link');
   const updateButton=shadow.querySelector('[data-action="check-update"]');
-  const updateMessages={current:'未发现更新。',error:'检查更新失败，请稍后重试。'};
+  const updateMessages={current:'未发现更新',error:'检查失败，请重试'};
   for(const button of shadow.querySelectorAll('[data-action]'))button.addEventListener('click',()=>{
     if(controlPending||!data?.process?.controlToken||Date.now()-lastUpdate>8000||typeof window.__codexMeterControl!=='function')return;
     const action=button.dataset.action;
@@ -192,12 +203,12 @@
     const processFields={name:process?.name,pid:process?.pid,endpoint:process?.port?`127.0.0.1:${process.port}`:null,clientPid:process?.clientPid,connection:fresh?process.connection:'等待连接',uptime:elapsed==null?null:elapsed>=3600?`${Math.floor(elapsed/3600)} 时 ${Math.floor(elapsed%3600/60)} 分`:`${Math.floor(elapsed/60)} 分 ${elapsed%60} 秒`};
     for(const el of shadow.querySelectorAll('[data-process]'))el.textContent=processFields[el.dataset.process]??'—';
     const canControl=!controlPending&&fresh&&process.controlToken&&typeof window.__codexMeterControl==='function';
-    for(const button of shadow.querySelectorAll('.process-actions:not(.update-actions) button'))button.disabled=!canControl;
+    for(const button of shadow.querySelectorAll('.process-actions button'))button.disabled=!canControl;
     const release=data?.release;
     const checking=release?.state==='checking';
     const updateAvailable=release?.state==='available';
     let message=updateMessages[release?.state]??'';
-    if(checking)message=fresh?'正在检查更新…':'连接已中断，请稍后重试。';
+    if(checking)message=fresh?'正在检查更新…':'连接中断，请重试';
     if(updateAvailable)message=`发现新版本 ${release.tag}`;
     if(updateFeedback.textContent!==message)updateFeedback.textContent=message;
     updateButton.disabled=!canControl||checking;
@@ -210,7 +221,7 @@
   }
   const timer=setInterval(()=>{place();paint();},1000);
   window.__codexComposerMeter = {
-    state:()=>{place();return {threadId:binding?.threadId??null,scope:binding?'agent':null,mounted:root.isConnected,visible:root.isConnected&&root.style.display!=='none'&&root.style.visibility!=='hidden',hiddenReason,version};},
+    state:()=>{place();return {threadId:binding?.threadId??null,scope:binding?'agent':null,mounted:root.isConnected,visible:root.isConnected&&root.style.display!=='none'&&root.style.visibility!=='hidden',hiddenReason,version,revision};},
     update:payload=>{place();data=payload;lastUpdate=Date.now();paint();},
     controlError:message=>{controlPending=false;feedback.textContent=message;paint();},
     destroy:()=>{clearInterval(timer);document.removeEventListener('pointerdown',outside);document.removeEventListener('keydown',key);root.remove();delete window.__codexComposerMeter;}

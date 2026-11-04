@@ -80,6 +80,7 @@ let rendererMtime=(await fs.stat(rendererPath)).mtimeMs;
 await store.scan();
 await status('waiting-for-codex',{port});
 instance.setState('running');
+void checkUpdates();
 while(!stopping){
  const rendererStat=await fs.stat(rendererPath).catch(()=>null);
  if(rendererStat&&rendererStat.mtimeMs!==rendererMtime){script=await fs.readFile(rendererPath,'utf8');rendererMtime=rendererStat.mtimeMs;}
@@ -112,7 +113,7 @@ while(!stopping){
     const q=quota&&Date.now()-quota.observedAt<120000?quota:store.quota??quota;
     const processInfo={name:path.basename(process.execPath),pid:process.pid,port,clientPid:clientPid||null,startedAt,connection:'已连接',controlToken:instance.metadata.token};
     await c.evaluate(`window.__codexComposerMeter?.update(${JSON.stringify({threadId:state?.threadId??null,usage,quota:q,process:processInfo,release})})`);
-    await status('connected',{port,windows:pages.length,mounted:state?.mounted,visible:state?.visible,scope:state?.scope??null,hiddenReason:state?.hiddenReason??null,rendererVersion:state?.version??null,hasUsage:!!usage,quotaSource:q?.source??null});
+    await status('connected',{port,windows:pages.length,mounted:state?.mounted,visible:state?.visible,scope:state?.scope??null,hiddenReason:state?.hiddenReason??null,rendererVersion:state?.version??null,rendererRevision:state?.revision??null,updateState:release.state,hasUsage:!!usage,quotaSource:q?.source??null});
    }catch{clients.get(page.id)?.close();clients.delete(page.id);await status('reconnecting',{port});}
   }
  }
