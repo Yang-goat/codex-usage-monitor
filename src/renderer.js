@@ -11,6 +11,7 @@
     * { box-sizing:border-box; } button { font:inherit; color:inherit; cursor:pointer; }
     .bar { display:flex; align-items:center; justify-content:center; height:100%; gap:7px; white-space:nowrap; font-size:10.5px; }
     .total,.context,.settings { border:0; background:transparent; padding:0 2px; border-radius:4px; }
+    .total,.context { display:inline-flex; align-items:center; justify-content:center; height:100%; gap:2px; }
     .total:hover,.total:focus-visible,.context:hover,.context:focus-visible,.settings:hover,.settings:focus-visible { background:rgba(128,128,128,.12); outline:1px solid rgba(128,128,128,.3); }
     .settings { display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; flex-shrink:0; }
     .settings svg { width:13px; height:13px; }
