@@ -62,20 +62,7 @@ try {
     Expect-Error { & (Join-Path $unknown 'scripts\Install.ps1') -AppPath $client -NodePath $node -ShortcutPath $unknownLink }
     Assert ((Get-FileHash -LiteralPath $unknownLink -Algorithm SHA256).Hash -eq $unknownHash) 'Unknown icon was overwritten.'
 
-    # Start with and without CLI: only simulated process launches.
-    $global:MonitorTestCliAvailable=$false
-    function Get-Command { param($Name) if($Name -eq 'codex.exe'){if($global:MonitorTestCliAvailable){return [pscustomobject]@{Source=$fakeCli}};return $null}; Microsoft.PowerShell.Core\Get-Command -Name $Name -ErrorAction SilentlyContinue }
-    function Get-NetTCPConnection { }
-    function Get-Process { }
-    function Start-Process { param($FilePath,$ArgumentList,$WorkingDirectory,$WindowStyle) $global:MonitorTestLaunches += [pscustomobject]@{File=$FilePath;Style=$WindowStyle} }
-    foreach($available in @($false,$true)) {
-        $global:MonitorTestCliAvailable=$available;$global:MonitorTestLaunches=@()
-        & (Join-Path $new 'scripts\Start.ps1') -AppPath $client -NodePath $node
-        Assert ($global:MonitorTestLaunches.Count -eq 2) 'Expected a client and helper launch.'
-        Assert ($global:MonitorTestLaunches[0].File -eq $client -and $global:MonitorTestLaunches[0].Style -eq 'Normal') 'Client must launch visibly.'
-        Assert ($global:MonitorTestLaunches[1].File -eq $node -and $global:MonitorTestLaunches[1].Style -eq 'Hidden') 'Helper must launch hidden.'
-        if($available){Assert ($env:CODEX_METER_CLI -eq $fakeCli) 'CLI path was not passed.'}else{Assert (-not $env:CODEX_METER_CLI) 'Missing CLI must remain optional.'}
-    }
+    & (Join-Path $PSScriptRoot 'launcher.test.ps1')
     Write-Output 'PASS: parsing, create/remove/reinstall, exact restoration, later-change protection, unknown-icon protection, optional CLI and hidden helper.'
 } finally {
     foreach ($name in $envBefore.Keys) { [Environment]::SetEnvironmentVariable($name,$envBefore[$name],'Process') }

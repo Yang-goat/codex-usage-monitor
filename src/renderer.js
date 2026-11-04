@@ -1,6 +1,6 @@
 // Runs only in the local Codex renderer; no remote scripts or network requests.
 (() => {
-  const version='0.1.2';
+  const version='0.1.3';
   if (window.__codexComposerMeter?.state().version===version) return;
   window.__codexComposerMeter?.destroy();
   const id = 'codex-composer-meter';
@@ -10,8 +10,18 @@
     :host { position:fixed; z-index:100; display:block; color:var(--text-secondary,#6b7280); font:11px/1.45 system-ui,"Microsoft YaHei",sans-serif; }
     * { box-sizing:border-box; } button { font:inherit; color:inherit; cursor:pointer; }
     .bar { display:flex; align-items:center; justify-content:center; height:100%; gap:7px; white-space:nowrap; font-size:10.5px; }
-    .total,.context { border:0; background:transparent; padding:0 2px; border-radius:4px; }
-    .total:hover,.total:focus-visible,.context:hover,.context:focus-visible { background:rgba(128,128,128,.12); outline:1px solid rgba(128,128,128,.3); }
+    .total,.context,.settings { border:0; background:transparent; padding:0 2px; border-radius:4px; }
+    .total:hover,.total:focus-visible,.context:hover,.context:focus-visible,.settings:hover,.settings:focus-visible { background:rgba(128,128,128,.12); outline:1px solid rgba(128,128,128,.3); }
+    .settings { display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; flex-shrink:0; }
+    .settings svg { width:13px; height:13px; }
+    .panel.settings-panel { left:auto; right:0; transform:none; width:270px; max-width:calc(100vw - 24px); }
+    .process-actions { display:flex; gap:8px; margin-top:12px; }
+    .process-actions button { flex:1; border:1px solid rgba(128,128,128,.28); background:transparent; padding:6px 10px; border-radius:6px; }
+    .process-actions button:hover:enabled { background:rgba(128,128,128,.12); }
+    .process-actions button:disabled { opacity:.45; cursor:default; }
+    .process-actions [data-action="stop"] { color:#c54747; }
+    .process-feedback { margin-top:8px; font-size:11px; }
+    .process-feedback:empty { display:none; }
     strong { font-weight:600; font-variant-numeric:tabular-nums; color:var(--text-primary,#31363d); }
     .dim { opacity:.75; } .warn { color:#b7791f; } .high { color:#c54747; }
     .panel { position:absolute; bottom:calc(100% + 12px); left:50%; transform:translateX(-50%); width:210px; padding:13px 12px; border:1px solid rgba(128,128,128,.23); border-radius:12px; background:var(--surface-primary,#fff); color:var(--text-primary,#31363d); box-shadow:0 8px 30px #0002; font-size:12px; }
@@ -19,7 +29,7 @@
     dl { margin:0; } .item { display:flex; justify-content:space-between; gap:12px; padding:4px 0; }
     dt { color:var(--text-secondary,#6b7280); } dd { margin:0; font-variant-numeric:tabular-nums; }
     @media(prefers-color-scheme:dark) { :host { color:var(--text-secondary,#aaa); } strong,.panel { color:var(--text-primary,#ddd); } .panel { background:var(--surface-primary,#252525); } }
-  </style><div class="bar"><button class="total" aria-expanded="false" aria-controls="details" title="展开当前聊天 token 明细"><strong data-k="total">—</strong> tok</button><span title="累计缓存输入 ÷ 累计输入">命中 <strong data-k="cache">—</strong></span><button class="context" aria-expanded="false" aria-controls="context-details" title="展开上下文实际数值">上下文 <strong data-k="context">—</strong></button><span class="dim" data-k="quota">额度 —</span><span class="dim" data-k="reset">重置 —</span></div>
+  </style><div class="bar"><button class="total" aria-expanded="false" aria-controls="details" title="展开当前聊天 token 明细"><strong data-k="total">—</strong> tok</button><span title="累计缓存输入 ÷ 累计输入">命中 <strong data-k="cache">—</strong></span><button class="context" aria-expanded="false" aria-controls="context-details" title="展开上下文实际数值">上下文 <strong data-k="context">—</strong></button><span class="dim" data-k="quota">额度 —</span><span class="dim" data-k="reset">重置 —</span><button class="settings" aria-label="状态条设置" aria-expanded="false" aria-controls="process-details" title="状态条设置"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.2 3-.6 2.2-1.9 1.1-2.2-.5-2 3.4 1.6 1.7v2.2l-1.6 1.7 2 3.4 2.2-.5 1.9 1.1.6 2.2h4l.6-2.2 1.9-1.1 2.2.5 2-3.4-1.6-1.7v-2.2l1.6-1.7-2-3.4-2.2.5-1.9-1.1-.6-2.2z"/><circle cx="11.2" cy="12" r="3"/></svg></button></div>
   <section class="panel" id="details" hidden aria-label="当前聊天 token 明细"><div class="heading">当前聊天 · Token 明细</div><dl>
   <div class="item"><dt>累计 token</dt><dd data-detail="total">—</dd></div>
   <div class="item"><dt>输入 token</dt><dd data-detail="input">—</dd></div>
@@ -31,7 +41,17 @@
   <div class="item"><dt>已用 token</dt><dd data-context-detail="used">—</dd></div>
   <div class="item"><dt>剩余 token</dt><dd data-context-detail="remaining">—</dd></div>
   <div class="item"><dt>窗口上限</dt><dd data-context-detail="window">—</dd></div>
-  </dl></section>`;
+  </dl></section>
+  <section class="panel settings-panel" id="process-details" hidden aria-label="状态条进程信息"><div class="heading">状态条设置</div><dl>
+  <div class="item"><dt>辅助进程</dt><dd data-process="name">—</dd></div>
+  <div class="item"><dt>进程 PID</dt><dd data-process="pid">—</dd></div>
+  <div class="item"><dt>调试端口</dt><dd data-process="endpoint">—</dd></div>
+  <div class="item"><dt>客户端 PID</dt><dd data-process="clientPid">—</dd></div>
+  <div class="item"><dt>连接状态</dt><dd data-process="connection">等待连接</dd></div>
+  <div class="item"><dt>运行时间</dt><dd data-process="uptime">—</dd></div>
+  </dl>
+  <div class="process-actions"><button type="button" data-action="stop" disabled>立即关闭</button><button type="button" data-action="restart" disabled>重启</button></div>
+  <div class="process-feedback" role="status" aria-live="polite"></div></section>`;
   const toggles = [...shadow.querySelectorAll('button[aria-controls]')];
   function close() { for(const button of toggles){shadow.getElementById(button.getAttribute('aria-controls')).hidden=true;button.setAttribute('aria-expanded','false');} }
   for(const button of toggles) button.addEventListener('click',()=>{
@@ -41,7 +61,14 @@
   function outside(e) { if (!e.composedPath().includes(root)) close(); }
   function key(e) { if (e.key === 'Escape') close(); }
   document.addEventListener('pointerdown', outside); document.addEventListener('keydown', key);
-  let data = null, lastThread = null, binding = null, hiddenReason='no-agent-composer';
+  let data = null, lastThread = null, binding = null, hiddenReason='no-agent-composer',lastUpdate=0,controlPending=false;
+  const feedback=shadow.querySelector('.process-feedback');
+  for(const button of shadow.querySelectorAll('[data-action]'))button.addEventListener('click',()=>{
+    if(controlPending||!data?.process?.controlToken||Date.now()-lastUpdate>8000||typeof window.__codexMeterControl!=='function')return;
+    controlPending=true;feedback.textContent=button.dataset.action==='restart'?'正在重启状态条…':'正在关闭状态条…';paint();
+    try{window.__codexMeterControl(JSON.stringify({action:button.dataset.action,token:data.process.controlToken}));}
+    catch{controlPending=false;feedback.textContent='操作未发送，请稍后重试。';paint();}
+  });
   const norm = x => typeof x === 'string' ? x.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i)?.[0]?.toLowerCase() ?? null : null;
   function isDotSurface() {
     const url=new URL(window.location.href);
@@ -138,6 +165,11 @@
     shadow.querySelector('[data-k="quota"]').title=tip;
     shadow.querySelector('[data-k="reset"]').title=tip;
     shadow.querySelector('[data-k="context"]').title=u?`${fmt(u.context)} / ${fmt(u.window)}；最近模型调用占用`:'尚无上下文数据';
+    const process=data?.process,fresh=process&&Date.now()-lastUpdate<=8000;
+    const elapsed=process?.startedAt?Math.max(0,Math.floor((Date.now()-Date.parse(process.startedAt))/1000)):null;
+    const processFields={name:process?.name,pid:process?.pid,endpoint:process?.port?`127.0.0.1:${process.port}`:null,clientPid:process?.clientPid,connection:fresh?process.connection:'等待连接',uptime:elapsed==null?null:elapsed>=3600?`${Math.floor(elapsed/3600)} 时 ${Math.floor(elapsed%3600/60)} 分`:`${Math.floor(elapsed/60)} 分 ${elapsed%60} 秒`};
+    for(const el of shadow.querySelectorAll('[data-process]'))el.textContent=processFields[el.dataset.process]??'—';
+    for(const button of shadow.querySelectorAll('[data-action]'))button.disabled=controlPending||!fresh||!process.controlToken||typeof window.__codexMeterControl!=='function';
     const bar=shadow.querySelector('.bar'), available=root.getBoundingClientRect().width;
     bar.style.fontSize='10.5px';bar.style.gap='7px';
     if(available>0&&bar.scrollWidth>available+1){bar.style.fontSize='9px';bar.style.gap='4px';}
@@ -146,7 +178,8 @@
   const timer=setInterval(()=>{place();paint();},1000);
   window.__codexComposerMeter = {
     state:()=>{place();return {threadId:binding?.threadId??null,scope:binding?'agent':null,mounted:root.isConnected,visible:root.isConnected&&root.style.display!=='none'&&root.style.visibility!=='hidden',hiddenReason,version};},
-    update:payload=>{place();data=payload;paint();},
+    update:payload=>{place();data=payload;lastUpdate=Date.now();paint();},
+    controlError:message=>{controlPending=false;feedback.textContent=message;paint();},
     destroy:()=>{clearInterval(timer);document.removeEventListener('pointerdown',outside);document.removeEventListener('keydown',key);root.remove();delete window.__codexComposerMeter;}
   };
   place();paint();

@@ -3,6 +3,7 @@ export class CDP {
     this.socket = socket; this.next = 1; this.pending = new Map();
     socket.addEventListener('message', event => {
       let msg; try { msg = JSON.parse(event.data); } catch { return; }
+      if (msg.method === 'Runtime.bindingCalled') { this.onBinding?.(msg.params); return; }
       const p = this.pending.get(msg.id); if (!p) return;
       this.pending.delete(msg.id); clearTimeout(p.timer);
       msg.error ? p.reject(new Error(msg.error.message)) : p.resolve(msg.result);
