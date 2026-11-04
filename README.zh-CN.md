@@ -19,7 +19,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/images/status-bar.png" alt="Codex 主聊天输入框底部的用量监控">
+  <img src="docs/images/status-bar.png" width="729" alt="Codex 主聊天输入框底部的用量监控">
 </p>
 
 ## 一眼看清当前用量
@@ -33,7 +33,7 @@
 | --- | --- | --- |
 | <img src="docs/images/token-details.png" width="210" alt="Token 明细"> | <img src="docs/images/context-details.png" width="210" alt="上下文明细"> | <img src="docs/images/settings-zh.png" width="220" alt="中文设置面板"> |
 
-状态条和明细截图来自实际客户端。设置截图使用模拟数据，展示当前源码界面。稳定版功能见对应 [Release 说明](https://github.com/Yang-goat/codex-usage-monitor/releases/latest)。
+中英文截图均来自当前源码的本地预览，使用相同的模拟数据。稳定版功能见对应 [Release 说明](https://github.com/Yang-goat/codex-usage-monitor/releases/latest)。
 
 ## 环境要求
 
