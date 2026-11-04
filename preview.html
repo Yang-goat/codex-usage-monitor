@@ -6,7 +6,7 @@
 <form data-chatgpt-composer hidden><div data-above-composer-conversation-id="chatgpt:00000000-0000-0000-0000-000000000098"></div><div data-composer-footer-responsive></div></form>
 <div class="composer" data-codex-composer-root><div data-above-composer-conversation-id="00000000-0000-0000-0000-000000000001"></div><div class="footer" data-composer-footer-responsive="true"><div class="editor-slot" data-composer-input><div class="editor" contenteditable="true" role="textbox" aria-label="聊天输入">帮我查看这个项目的运行情况</div></div><div class="native native-left"><button>＋</button><button>◉ 帮我批准</button></div><div class="native native-right"><button>GPT-6.1 Sol 中 ⌄</button><button>♩</button><button class="send">↑</button></div></div></div>
 <script src="/renderer.js"></script><script>
-window.previewSample={threadId:'00000000-0000-0000-0000-000000000001',usage:{total:2345678,input:2300000,output:45678,reasoning:12340,cached:2100000,cacheRate:91.3,context:189000,window:475000,contextPercent:39.8},quota:{windows:[{remaining:26,minutes:10080,resetsAt:Date.now()/1000+345678}],observedAt:Date.now(),source:'live'},process:{name:'node.exe',pid:12345,clientPid:6789,port:9339,connection:'已连接 · 模拟',startedAt:new Date(Date.now()-620000).toISOString(),controlToken:'preview-only'}};
+window.previewSample={locale:'zh-CN',threadId:'00000000-0000-0000-0000-000000000001',usage:{total:2345678,input:2300000,output:45678,reasoning:12340,cached:2100000,cacheRate:91.3,context:189000,window:475000,contextPercent:39.8},quota:{windows:[{remaining:26,minutes:10080,resetsAt:Date.now()/1000+345678}],observedAt:Date.now(),source:'live'},process:{name:'node.exe',pid:12345,clientPid:6789,port:9339,startedAt:new Date(Date.now()-620000).toISOString(),controlToken:'preview-only'}};
 function simulateUpdateCheck(result){
   previewSample.release={state:'checking'};
   window.__codexComposerMeter?.update(previewSample);
@@ -19,7 +19,11 @@ window.__codexMeterControl=payload=>{
   const command=JSON.parse(payload);
   window.previewLastControl=command;
   if(command.action==='check-update')simulateUpdateCheck({state:'available',tag:'v0.1.5'});
-  else window.__codexComposerMeter.controlError('预览已收到操作，未控制真实进程。');
+  else if(command.action==='set-locale'){
+    previewSample.locale=command.locale;
+    window.__codexComposerMeter.localeResult({locale:command.locale,saved:true});
+    window.__codexComposerMeter.update(previewSample);
+  }else window.__codexComposerMeter.controlError('previewControl');
 };
 window.setPreviewMode=mode=>{const composer=document.querySelector('.composer');composer.toggleAttribute('data-codex-composer-root',mode!=='chat');composer.toggleAttribute('data-chatgpt-composer',mode==='chat');composer.dataset.previewMode=mode;composer.querySelector('[data-above-composer-conversation-id]').setAttribute('data-above-composer-conversation-id',mode==='chat'?'chatgpt:00000000-0000-0000-0000-000000000098':previewSample.threadId);window.__codexComposerMeter.state();window.__codexComposerMeter.update(previewSample);};
 simulateUpdateCheck({state:'current'});

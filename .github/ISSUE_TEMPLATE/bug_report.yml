@@ -1,0 +1,29 @@
+name: Bug report / 问题报告
+description: Report an issue with the Windows monitor / 报告 Windows 用量监控问题
+body:
+  - type: input
+    id: versions
+    attributes:
+      label: Windows, Codex, and monitor versions / 版本
+      description: Include the release tag or Git commit if you know it.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce / 复现步骤
+      description: Include how you started Codex and which chat surface you used.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened / 实际表现
+      description: Describe what you saw and what you expected.
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Optional diagnostics / 可选诊断
+      description: Paste a sanitized error or attach a cropped screenshot. Keep credentials, chat logs, and runtime files private.

@@ -8,13 +8,16 @@ import { CDP, targets } from './cdp.mjs';
 import { readQuota } from './quota.mjs';
 import { acquireInstance, legacyInstanceAlive } from './instance.mjs';
 import { checkLatestRelease } from './releases.mjs';
+import { loadPreferences } from './preferences.mjs';
 import packageMetadata from '../package.json' with { type: 'json' };
 const root=path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+const runtime=path.resolve(process.env.CODEX_METER_RUNTIME||path.join(root,'runtime'));
 const port=Number(process.env.CODEX_METER_PORT||9339);
 if(!Number.isInteger(port)||port<1024||port>65535)throw new Error('Invalid meter port');
 const clients=new Map();let stopping=false,firstSeen=false,lastSeen=Date.now(),lastQuota=0,quotaBusy=false,quota=null;
 const abort=new AbortController();let quotaTask=null,ownerWatch=null,controlBusy=false;
 let release={state:'idle'};
+let preferences;
 const startedAt=new Date().toISOString();
 const instance=await acquireInstance(root,port,action=>{void control(action);});
 if(!instance)process.exit(0);
@@ -28,6 +31,13 @@ async function checkUpdates() {
  }
 }
 
+async function setLocale(client, locale) {
+ if(stopping)return;
+ let saved=true;
+ try{await preferences.setLocale(locale);}catch{saved=false;}
+ await client.evaluate(`window.__codexComposerMeter?.localeResult?.(${JSON.stringify({locale:preferences.locale,saved})})`).catch(()=>{});
+}
+
 async function control(action){
  if(stopping||controlBusy||!['stop','restart'].includes(action))return;
  controlBusy=true;
@@ -37,7 +47,7 @@ async function control(action){
    await new Promise((resolve,reject)=>{worker.once('spawn',resolve);worker.once('error',reject);});worker.unref();
   }catch{
    controlBusy=false;
-   for(const c of clients.values())void c.evaluate('window.__codexComposerMeter?.controlError("重启进程创建失败，请稍后重试。")').catch(()=>{});
+   for(const c of clients.values())void c.evaluate('window.__codexComposerMeter?.controlError("restartFailed")').catch(()=>{});
    return;
   }
  }
@@ -48,7 +58,7 @@ process.on('uncaughtException',()=>{void stop('error',1);});
 process.on('unhandledRejection',()=>{void stop('error',1);});
 function status(state,extra={}) {
  if(stopping&&state!=='stopped'&&state!=='error')return Promise.resolve();
- return fs.writeFile(path.join(process.env.CODEX_METER_RUNTIME||path.join(root,'runtime'),'status.json'),JSON.stringify({state,time:new Date().toISOString(),pid:process.pid,...extra},null,2)).catch(()=>{});
+ return fs.writeFile(path.join(runtime,'status.json'),JSON.stringify({state,time:new Date().toISOString(),pid:process.pid,...extra},null,2)).catch(()=>{});
 }
 async function stop(reason='stopped',code=0){
  if(stopping)return;stopping=true;instance.setState('stopping');abort.abort();clearInterval(ownerWatch);
@@ -56,12 +66,12 @@ async function stop(reason='stopped',code=0){
  await Promise.allSettled([...clients.values()].map(async c=>{
   let timer;try{await Promise.race([(async()=>{await c.evaluate('window.__codexComposerMeter?.destroy()');await c.call('Runtime.removeBinding',{name:'__codexMeterControl'});})(),new Promise(resolve=>{timer=setTimeout(resolve,1500);})]);}finally{clearTimeout(timer);c.close();}
  }));
- await quotaTask;
+ await Promise.all([quotaTask,preferences?.flush()]);
  await status(reason,{port});await instance.close();clearTimeout(deadline);process.exit(code);
 }
 try{
-await fs.mkdir(path.resolve(process.env.CODEX_METER_RUNTIME||path.join(root,'runtime')),{recursive:true});
-const lockPath=path.join(process.env.CODEX_METER_RUNTIME||path.join(root,'runtime'),'meter.lock');
+await fs.mkdir(runtime,{recursive:true});
+const lockPath=path.join(runtime,'meter.lock');
 // Allow an old helper its normal exit grace period during a local upgrade.
 const legacyDeadline=Date.now()+16000;
 while(await legacyInstanceAlive(root)){
@@ -74,6 +84,7 @@ if(Number.isInteger(clientPid)&&clientPid>0){
  ownerWatch=setInterval(()=>{try{process.kill(clientPid,0);}catch(e){if(e.code==='ESRCH')void stop();}},1000);
 }
 const store=new Sessions(path.join(process.env.CODEX_HOME||path.join(os.homedir(),'.codex'),'sessions'));
+preferences=await loadPreferences(runtime);
 const rendererPath=path.join(root,'src','renderer.js');
 let script=await fs.readFile(rendererPath,'utf8');
 let rendererMtime=(await fs.stat(rendererPath)).mtimeMs;
@@ -102,6 +113,7 @@ while(!stopping){
        const command=JSON.parse(event.payload);
        if(command.token!==instance.metadata.token)return;
        if(command.action==='check-update')void checkUpdates();
+       else if(command.action==='set-locale')void setLocale(c,command.locale);
        else void control(command.action);
       }catch{}
      };
@@ -111,8 +123,8 @@ while(!stopping){
     const state=await c.evaluate('window.__codexComposerMeter?.state()');
     const usage=state?.threadId?await store.read(state.threadId):null;
     const q=quota&&Date.now()-quota.observedAt<120000?quota:store.quota??quota;
-    const processInfo={name:path.basename(process.execPath),pid:process.pid,port,clientPid:clientPid||null,startedAt,connection:'已连接',controlToken:instance.metadata.token};
-    await c.evaluate(`window.__codexComposerMeter?.update(${JSON.stringify({threadId:state?.threadId??null,usage,quota:q,process:processInfo,release})})`);
+    const processInfo={name:path.basename(process.execPath),pid:process.pid,port,clientPid:clientPid||null,startedAt,controlToken:instance.metadata.token};
+    await c.evaluate(`window.__codexComposerMeter?.update(${JSON.stringify({threadId:state?.threadId??null,usage,quota:q,process:processInfo,release,locale:preferences.locale})})`);
     await status('connected',{port,windows:pages.length,mounted:state?.mounted,visible:state?.visible,scope:state?.scope??null,hiddenReason:state?.hiddenReason??null,rendererVersion:state?.version??null,rendererRevision:state?.revision??null,updateState:release.state,hasUsage:!!usage,quotaSource:q?.source??null});
    }catch{clients.get(page.id)?.close();clients.delete(page.id);await status('reconnecting',{port});}
   }

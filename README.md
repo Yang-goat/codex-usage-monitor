@@ -1,36 +1,29 @@
 # Codex 用量监控
 
-在 **Codex 模式和 ChatGPT Work 的主聊天输入框底部**显示当前聊天的 token、缓存命中率、上下文占用、账号剩余额度和重置倒计时。侧边聊天、普通 ChatGPT 聊天、Dot 主窗口对话及快捷小窗隐藏，输入焦点切换不改变统计归属。
+[简体中文](README.md) · [English](README.en.md)
 
-目前支持 **Windows 10/11、简体中文界面**，适配 Windows 商店版 Codex。通过本地调试接口临时挂载界面，不改写客户端程序包。
+[![Source checks](https://github.com/Yang-goat/codex-usage-monitor/actions/workflows/check.yml/badge.svg)](https://github.com/Yang-goat/codex-usage-monitor/actions/workflows/check.yml)
+[![GitHub Release](https://img.shields.io/github/v/release/Yang-goat/codex-usage-monitor)](https://github.com/Yang-goat/codex-usage-monitor/releases/latest)
+[![MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**最新正式版本：[v0.1.4](https://github.com/Yang-goat/codex-usage-monitor/releases/tag/v0.1.4)** · [下载 Windows ZIP](https://github.com/Yang-goat/codex-usage-monitor/releases/download/v0.1.4/codex-usage-monitor-v0.1.4-windows.zip) · [SHA-256 校验文件](https://github.com/Yang-goat/codex-usage-monitor/releases/download/v0.1.4/SHA256SUMS.txt)。ZIP 是源码运行包，需要 Node.js 22+。
+在 Windows 版 Codex 和 ChatGPT Work 的主聊天输入框底部，随时查看 token、上下文占用和账号剩余额度。
 
-![真实客户端中的状态条](docs/images/status-bar.png)
+**[下载 Windows 版](https://github.com/Yang-goat/codex-usage-monitor/releases/latest)** · [快速安装](#快速安装) · [交给 AI Agent 安装](docs/AI_AGENT_SETUP.md) · [报告问题](https://github.com/Yang-goat/codex-usage-monitor/issues/new/choose)
 
-| Token 明细 | 上下文明细 |
-| --- | --- |
-| <img src="docs/images/token-details.png" width="210" alt="真实 Token 明细"> | <img src="docs/images/context-details.png" width="210" alt="真实上下文明细"> |
+![Codex 主聊天输入框底部的用量监控](docs/images/status-bar.png)
 
-截图来自真实客户端，仅截取监控组件；数字是截图时的实际使用值。图中分别展示两种明细，实际操作时一次只展开一个。
+## 一眼看清当前用量
 
-## 进程管理与设置
+- **Token 与缓存** — 查看当前聊天的累计用量和输入缓存命中率。点击 token 数值可展开输入、输出、推理和缓存明细。
+- **上下文** — 以最近一次模型调用为基准，查看已用、剩余和窗口上限。
+- **账号额度** — 查看共享额度窗口的剩余百分比和重置倒计时。实时查询不可用时，可使用本机日志快照。
+- **紧凑设置** — 最右侧齿轮集中显示语言、版本、更新状态和辅助进程控制。简体中文与 English 可随时切换，选择会保存在本机。
 
-最右侧齿轮展示辅助进程名、PID、调试端口、客户端 PID、连接状态和运行时间，并提供立即关闭和重启。操作只影响状态条，Codex 与当前任务继续运行；关闭后再次点击桌面入口可恢复。面板采用紧凑布局，操作提示仅在有内容时显示。
+| Token 明细 | 上下文明细 | 设置预览 |
+| --- | --- | --- |
+| <img src="docs/images/token-details.png" width="210" alt="Token 明细"> | <img src="docs/images/context-details.png" width="210" alt="上下文明细"> | <img src="docs/images/settings-zh.png" width="220" alt="中文设置面板"> |
 
-启动器使用命名互斥锁，辅助进程使用命名管道保证单实例。端口释放最多等待约 20 秒，不自动换端口，也不终止占用者。重启等待旧进程退出后再启动替代进程；保留安装器的自定义端口设置。联动运行时每秒检查客户端 PID，退出清理有 5 秒上限；缺少客户端 PID 的独立运行保留约 12 秒断连宽限。
-
-状态条辅助进程每次启动时会自动检查 GitHub 最新正式版本。打开设置面板后，右上角显示检查结果，也可以点击“检查更新”重新查询。发现新版时，同一区域会显示版本号和下载链接。
-
-## 能做什么
-
-- 状态条保持单行：`2.35M tok　命中 91.3%　上下文 40%　额度 26%　重置 4d0h`。
-- 点击 `数值 tok`，展开累计、输入、输出、推理、缓存输入明细。
-- 点击“上下文”，展开已用 token、剩余 token 和窗口上限。
-- 明细使用 K/M/B 缩写，悬停查看完整整数；点击外部或按 Esc 收起。
-- 绑定当前可见主聊天，排除侧边聊天与隐藏标签页缓存；侧边输入框聚焦时仍显示主聊天统计。
-- 将已有桌面 Codex 图标接入启动器；没有图标时创建一个。以后只点这个图标，客户端与监控一起启动。
-- 客户端完全退出后，辅助进程自动清理退出；没有注册开机常驻项、系统服务或计划任务。
+状态条和明细截图来自实际客户端。设置截图使用模拟数据，展示当前源码界面。稳定版功能见对应 [Release 说明](https://github.com/Yang-goat/codex-usage-monitor/releases/latest)。
 
 ## 环境要求
 
@@ -43,30 +36,9 @@
 
 **没有 npm 生产依赖，无需执行 `npm install`。** CLI 不可用或额度接口失败时，聊天统计仍能使用，额度退回日志快照或显示 `—`。没有本地会话日志的远程/云端聊天，token 项可能为 `—`。
 
-## 安装
+## 快速安装
 
-### 方式一：交给 AI Agent 自动配置
-
-将以下提示词复制给能够运行本机命令的 AI Agent：
-
-```text
-请帮我下载并安装 Codex 用量监控：
-https://github.com/Yang-goat/codex-usage-monitor
-
-请先读取仓库 README.md、AGENTS.md 和 scripts/ 下的安装、启动、卸载脚本，再执行：
-1. 检查 Windows、PowerShell、Node.js 22+ 和 Codex 桌面端。保留现有环境；缺少依赖时说明缺项和安装方式。
-2. 优先下载仓库最新正式 Release 的 Windows ZIP 和 SHA256SUMS.txt，核对 SHA-256 后解压到长期保留的独立目录；没有 Release 时再 clone 源码。不用临时目录，不覆盖已有项目。已有 clone 时先检查本地改动再更新。
-3. 不需要 npm install。运行 scripts/Start.ps1 -CheckOnly 做只读发现，随后执行 scripts/Install.ps1。
-4. 优先接入已核实的桌面 Codex 图标。安装器会备份原快捷方式。若现有图标无法核实，不覆盖；改用未占用的 Codex 用量监控.lnk 作为 -ShortcutPath。
-5. 客户端或 Node 无法自动发现时，用 -AppPath / -NodePath 指定真实路径；不要把 CLI codex.exe 当成桌面客户端。
-6. 不强制结束或重启正在运行的 Codex。配置完成后告诉我正常退出全部客户端实例，再从已接入的图标重开。只在我同意后进行需要重启的实际界面检查。
-7. 不读取、复制、打印或上传 auth.json、Token、完整聊天日志或会话数据库；不修改 Codex 全局配置或客户端程序包；不把调试端口暴露到局域网。
-最后说明安装目录、使用哪个图标启动、如何卸载，以及实际执行和未执行的检查。
-```
-
-单独版本见 [AI Agent 安装提示词](docs/AI_AGENT_SETUP.md)。使用 Fork 时，将提示词中的仓库链接替换成对应地址。
-
-### 方式二：手动安装
+希望交给工具配置时，可以使用 [AI Agent 安装提示词](docs/AI_AGENT_SETUP.md)。
 
 从 [Releases](https://github.com/Yang-goat/codex-usage-monitor/releases/latest) 下载 Windows ZIP 与 `SHA256SUMS.txt`。在 PowerShell 中核对下载的 ZIP：
 
@@ -118,7 +90,8 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install.ps1 `
 2. 双击安装时接入或创建的桌面图标。Codex 和辅助进程会一起启动，辅助进程没有单独窗口。
 3. 打开 Codex 聊天或 ChatGPT Work。第一次没有已完成的模型调用时，部分统计可能为 `—`。
 4. 点击 token 数值或“上下文”查看明细；额度与重置时间也有悬停信息。
-5. 完全退出客户端后，辅助进程自动结束。只隐藏窗口到托盘时，客户端仍在运行，辅助进程也继续待命。
+5. 点击齿轮，在「界面语言」选择简体中文或 English。辅助进程启动时自动检查更新，也可手动重查。发现新版时会给出对应的下载链接。
+6. 完全退出客户端后，辅助进程自动结束。只隐藏窗口到托盘时，客户端仍在运行，辅助进程也继续待命。
 
 **启动联动针对安装器处理的 `.lnk` 图标。** 开始菜单中的内置应用项、旧的任务栏入口、协议链接或直接运行客户端可能不带调试参数。若已通过这些入口打开，请正常退出后从接入的图标重开。监控不会强制终止客户端。
 
@@ -181,10 +154,12 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Uninstall.ps1
 - 会话日志仅在本机读取，增量解析并保留数值统计，不复制聊天正文到项目。
 - 本地 CLI 的额度查询访问账号服务。每次辅助进程启动及手动检查更新时，会向 GitHub 请求公开发布信息。两项功能均无遥测或第三方统计。
 - 调试接口仅绑定回环地址。它允许本机程序控制客户端，请勿转发端口或开放到局域网。
-- 不支持 macOS/Linux 桌面安装；目前只有简体中文界面。工作区或客户端禁用调试能力时无法挂载。
+- 不支持 macOS/Linux 桌面安装；安装器和启动器的命令行提示使用简体中文。工作区或客户端禁用调试能力时无法挂载。
 - 当前适配基于 Windows 商店客户端 `26.1027` 的输入框结构；不同版本需要实际核验。本仓库的源码测试不代表所有客户端版本均兼容。
 
-## 开发
+## 开发与贡献
+
+欢迎通过 [问题报告表单](https://github.com/Yang-goat/codex-usage-monitor/issues/new/choose) 提交 Windows、Codex、监控版本及复现步骤。分享截图前请去除隐私数据。
 
 ```powershell
 npm.cmd test
@@ -195,7 +170,7 @@ npm.cmd run preview
 
 发布前提交全部修改，再运行 `npm.cmd run build:release`。打包脚本从已提交的 Git 源码创建 `dist/release/v<版本>/` 下的 Windows ZIP、`SHA256SUMS.txt` 和本地构建清单；不会打包 `.git/`、未跟踪文件或 `runtime/`。发布说明见 [v0.1.4](docs/releases/v0.1.4.md)，历史变化见 [CHANGELOG](CHANGELOG.md)。
 
-预览页位于 `http://127.0.0.1:9841`，只使用模拟数据。支持切换 Codex、Work、普通聊天、Dot 和深浅色，不读取真实聊天。界面源码在 `src/renderer.js`；每次改变注入界面时同时更新渲染器版本，运行中的新版辅助进程会检测源文件变化。
+预览页位于 `http://127.0.0.1:9841`，只使用模拟数据。支持切换 Codex、Work、普通聊天和深浅色，不读取真实聊天。界面源码在 `src/renderer.js`；每次改变注入界面时同时更新渲染器版本，运行中的新版辅助进程会检测源文件变化。
 
 ```text
 src/                   会话统计、额度查询、调试连接与状态条
