@@ -1,6 +1,6 @@
 // Runs only in the local Codex renderer; no remote scripts or network requests.
 (() => {
-  const version='0.1.3';
+  const version='0.1.4';
   if (window.__codexComposerMeter?.state().version===version) return;
   window.__codexComposerMeter?.destroy();
   const id = 'codex-composer-meter';
@@ -15,14 +15,18 @@
     .total:hover,.total:focus-visible,.context:hover,.context:focus-visible,.settings:hover,.settings:focus-visible { background:rgba(128,128,128,.12); outline:1px solid rgba(128,128,128,.3); }
     .settings { display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; flex-shrink:0; }
     .settings svg { width:13px; height:13px; }
-    .panel.settings-panel { left:auto; right:0; transform:none; width:270px; max-width:calc(100vw - 24px); }
+    .panel.settings-panel { left:auto; right:0; transform:none; width:220px; max-width:calc(100vw - 24px); }
     .process-actions { display:flex; gap:8px; margin-top:12px; }
     .process-actions button { flex:1; border:1px solid rgba(128,128,128,.28); background:transparent; padding:6px 10px; border-radius:6px; }
     .process-actions button:hover:enabled { background:rgba(128,128,128,.12); }
     .process-actions button:disabled { opacity:.45; cursor:default; }
     .process-actions [data-action="stop"] { color:#c54747; }
-    .process-feedback { margin-top:8px; font-size:11px; }
-    .process-feedback:empty { display:none; }
+    .process-feedback,.update-feedback { margin-top:8px; font-size:11px; }
+    .process-feedback:empty,.update-feedback:empty { display:none; }
+    .update-actions { margin-top:8px; }
+    .update-actions button { padding-block:4px; }
+    .update-link { display:block; margin-top:4px; color:inherit; text-decoration:underline; }
+    .update-link[hidden] { display:none; }
     strong { font-weight:600; font-variant-numeric:tabular-nums; color:var(--text-primary,#31363d); }
     .dim { opacity:.75; } .warn { color:#b7791f; } .high { color:#c54747; }
     .panel { position:absolute; bottom:calc(100% + 12px); left:50%; transform:translateX(-50%); width:210px; padding:13px 12px; border:1px solid rgba(128,128,128,.23); border-radius:12px; background:var(--surface-primary,#fff); color:var(--text-primary,#31363d); box-shadow:0 8px 30px #0002; font-size:12px; }
@@ -43,7 +47,8 @@
   <div class="item"><dt>剩余 token</dt><dd data-context-detail="remaining">—</dd></div>
   <div class="item"><dt>窗口上限</dt><dd data-context-detail="window">—</dd></div>
   </dl></section>
-  <section class="panel settings-panel" id="process-details" hidden aria-label="状态条进程信息"><div class="heading">状态条设置</div><dl>
+  <section class="panel settings-panel" id="process-details" hidden aria-label="状态条设置"><div class="heading">状态条设置</div><dl>
+  <div class="item"><dt>当前版本</dt><dd>v${version}</dd></div>
   <div class="item"><dt>辅助进程</dt><dd data-process="name">—</dd></div>
   <div class="item"><dt>进程 PID</dt><dd data-process="pid">—</dd></div>
   <div class="item"><dt>调试端口</dt><dd data-process="endpoint">—</dd></div>
@@ -52,7 +57,10 @@
   <div class="item"><dt>运行时间</dt><dd data-process="uptime">—</dd></div>
   </dl>
   <div class="process-actions"><button type="button" data-action="stop" disabled>立即关闭</button><button type="button" data-action="restart" disabled>重启</button></div>
-  <div class="process-feedback" role="status" aria-live="polite"></div></section>`;
+  <div class="process-feedback" role="status" aria-live="polite"></div>
+  <div class="process-actions update-actions"><button type="button" data-action="check-update" disabled>检查更新</button></div>
+  <div class="update-feedback" role="status" aria-live="polite"></div>
+  <a class="update-link" target="_blank" rel="noopener noreferrer" hidden>前往 GitHub 下载</a></section>`;
   const toggles = [...shadow.querySelectorAll('button[aria-controls]')];
   function close() { for(const button of toggles){shadow.getElementById(button.getAttribute('aria-controls')).hidden=true;button.setAttribute('aria-expanded','false');} }
   for(const button of toggles) button.addEventListener('click',()=>{
@@ -64,11 +72,24 @@
   document.addEventListener('pointerdown', outside); document.addEventListener('keydown', key);
   let data = null, lastThread = null, binding = null, hiddenReason='no-agent-composer',lastUpdate=0,controlPending=false;
   const feedback=shadow.querySelector('.process-feedback');
+  const updateFeedback=shadow.querySelector('.update-feedback');
+  const updateLink=shadow.querySelector('.update-link');
+  const updateButton=shadow.querySelector('[data-action="check-update"]');
+  const updateMessages={current:'未发现更新。',error:'检查更新失败，请稍后重试。'};
   for(const button of shadow.querySelectorAll('[data-action]'))button.addEventListener('click',()=>{
     if(controlPending||!data?.process?.controlToken||Date.now()-lastUpdate>8000||typeof window.__codexMeterControl!=='function')return;
-    controlPending=true;feedback.textContent=button.dataset.action==='restart'?'正在重启状态条…':'正在关闭状态条…';paint();
-    try{window.__codexMeterControl(JSON.stringify({action:button.dataset.action,token:data.process.controlToken}));}
-    catch{controlPending=false;feedback.textContent='操作未发送，请稍后重试。';paint();}
+    const action=button.dataset.action;
+    if(action==='check-update')data.release={state:'checking'};
+    else {
+      controlPending=true;
+      feedback.textContent=action==='restart'?'正在重启状态条…':'正在关闭状态条…';
+    }
+    try{window.__codexMeterControl(JSON.stringify({action,token:data.process.controlToken}));}
+    catch{
+      if(action==='check-update')data.release={state:'error'};
+      else{controlPending=false;feedback.textContent='操作未发送，请稍后重试。';}
+    }
+    paint();
   });
   const norm = x => typeof x === 'string' ? x.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i)?.[0]?.toLowerCase() ?? null : null;
   function isDotSurface() {
@@ -170,7 +191,18 @@
     const elapsed=process?.startedAt?Math.max(0,Math.floor((Date.now()-Date.parse(process.startedAt))/1000)):null;
     const processFields={name:process?.name,pid:process?.pid,endpoint:process?.port?`127.0.0.1:${process.port}`:null,clientPid:process?.clientPid,connection:fresh?process.connection:'等待连接',uptime:elapsed==null?null:elapsed>=3600?`${Math.floor(elapsed/3600)} 时 ${Math.floor(elapsed%3600/60)} 分`:`${Math.floor(elapsed/60)} 分 ${elapsed%60} 秒`};
     for(const el of shadow.querySelectorAll('[data-process]'))el.textContent=processFields[el.dataset.process]??'—';
-    for(const button of shadow.querySelectorAll('[data-action]'))button.disabled=controlPending||!fresh||!process.controlToken||typeof window.__codexMeterControl!=='function';
+    const canControl=!controlPending&&fresh&&process.controlToken&&typeof window.__codexMeterControl==='function';
+    for(const button of shadow.querySelectorAll('.process-actions:not(.update-actions) button'))button.disabled=!canControl;
+    const release=data?.release;
+    const checking=release?.state==='checking';
+    const updateAvailable=release?.state==='available';
+    let message=updateMessages[release?.state]??'';
+    if(checking)message=fresh?'正在检查更新…':'连接已中断，请稍后重试。';
+    if(updateAvailable)message=`发现新版本 ${release.tag}`;
+    if(updateFeedback.textContent!==message)updateFeedback.textContent=message;
+    updateButton.disabled=!canControl||checking;
+    updateLink.hidden=!updateAvailable;
+    if(updateAvailable)updateLink.href=`https://github.com/Yang-goat/codex-usage-monitor/releases/tag/${encodeURIComponent(release.tag)}`;
     const bar=shadow.querySelector('.bar'), available=root.getBoundingClientRect().width;
     bar.style.fontSize='10.5px';bar.style.gap='7px';
     if(available>0&&bar.scrollWidth>available+1){bar.style.fontSize='9px';bar.style.gap='4px';}

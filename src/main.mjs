@@ -7,14 +7,27 @@ import { Sessions } from './sessions.mjs';
 import { CDP, targets } from './cdp.mjs';
 import { readQuota } from './quota.mjs';
 import { acquireInstance, legacyInstanceAlive } from './instance.mjs';
+import { checkLatestRelease } from './releases.mjs';
+import packageMetadata from '../package.json' with { type: 'json' };
 const root=path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const port=Number(process.env.CODEX_METER_PORT||9339);
 if(!Number.isInteger(port)||port<1024||port>65535)throw new Error('Invalid meter port');
 const clients=new Map();let stopping=false,firstSeen=false,lastSeen=Date.now(),lastQuota=0,quotaBusy=false,quota=null;
 const abort=new AbortController();let quotaTask=null,ownerWatch=null,controlBusy=false;
+let release={state:'idle'};
 const startedAt=new Date().toISOString();
 const instance=await acquireInstance(root,port,action=>{void control(action);});
 if(!instance)process.exit(0);
+async function checkUpdates() {
+ if(stopping||release.state==='checking')return;
+ release={state:'checking'};
+ try {
+  release=await checkLatestRelease(packageMetadata.version,abort.signal);
+ } catch {
+  release={state:'error'};
+ }
+}
+
 async function control(action){
  if(stopping||controlBusy||!['stop','restart'].includes(action))return;
  controlBusy=true;
@@ -84,7 +97,12 @@ while(!stopping){
      c=await CDP.connect(page.webSocketDebuggerUrl);clients.set(page.id,c);
      c.onBinding=event=>{
       if(event.name!=='__codexMeterControl')return;
-      try{const command=JSON.parse(event.payload);if(command.token===instance.metadata.token)void control(command.action);}catch{}
+      try{
+       const command=JSON.parse(event.payload);
+       if(command.token!==instance.metadata.token)return;
+       if(command.action==='check-update')void checkUpdates();
+       else void control(command.action);
+      }catch{}
      };
      await c.call('Runtime.addBinding',{name:'__codexMeterControl'});
     }
@@ -93,7 +111,7 @@ while(!stopping){
     const usage=state?.threadId?await store.read(state.threadId):null;
     const q=quota&&Date.now()-quota.observedAt<120000?quota:store.quota??quota;
     const processInfo={name:path.basename(process.execPath),pid:process.pid,port,clientPid:clientPid||null,startedAt,connection:'已连接',controlToken:instance.metadata.token};
-    await c.evaluate(`window.__codexComposerMeter?.update(${JSON.stringify({threadId:state?.threadId??null,usage,quota:q,process:processInfo})})`);
+    await c.evaluate(`window.__codexComposerMeter?.update(${JSON.stringify({threadId:state?.threadId??null,usage,quota:q,process:processInfo,release})})`);
     await status('connected',{port,windows:pages.length,mounted:state?.mounted,visible:state?.visible,scope:state?.scope??null,hiddenReason:state?.hiddenReason??null,rendererVersion:state?.version??null,hasUsage:!!usage,quotaSource:q?.source??null});
    }catch{clients.get(page.id)?.close();clients.delete(page.id);await status('reconnecting',{port});}
   }

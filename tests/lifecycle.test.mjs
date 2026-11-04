@@ -20,6 +20,7 @@ async function fixture(t) {
   await fs.mkdir(base, { recursive: true });
   const root = await fs.mkdtemp(path.join(base, 'run-'));
   await fs.cp(path.join(project, 'src'), path.join(root, 'src'), { recursive: true });
+  await fs.copyFile(path.join(project, 'package.json'), path.join(root, 'package.json'));
   await fs.mkdir(path.join(root, 'runtime'));
   await fs.mkdir(path.join(root, 'home', 'sessions'), { recursive: true });
   const children = [];

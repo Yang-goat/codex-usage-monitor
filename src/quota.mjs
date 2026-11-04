@@ -28,6 +28,6 @@ export async function readQuota(executable = 'codex', { signal } = {}) {
       if(r.id===1){if(r.error){finish(null);return;}send({method:'initialized'});send({id:2,method:'account/rateLimits/read'});}
       if(r.id===2) finish(r.error?null:normalizeLimits(r.result));
     });
-    send({id:1,method:'initialize',params:{clientInfo:{name:'codex_composer_meter',title:'Codex 聊天用量状态条',version:'0.1.3'},capabilities:{experimentalApi:true}}});
+    send({id:1,method:'initialize',params:{clientInfo:{name:'codex_composer_meter',title:'Codex 聊天用量状态条',version:'0.1.4'},capabilities:{experimentalApi:true}}});
   });
 }

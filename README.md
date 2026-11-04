@@ -4,7 +4,7 @@
 
 目前支持 **Windows 10/11、简体中文界面**，适配 Windows 商店版 Codex。通过本地调试接口临时挂载界面，不改写客户端程序包。
 
-**最新正式版本：[v0.1.3](https://github.com/Yang-goat/codex-usage-monitor/releases/tag/v0.1.3)** · [下载 Windows ZIP](https://github.com/Yang-goat/codex-usage-monitor/releases/download/v0.1.3/codex-usage-monitor-v0.1.3-windows.zip) · [SHA-256 校验文件](https://github.com/Yang-goat/codex-usage-monitor/releases/download/v0.1.3/SHA256SUMS.txt)。ZIP 是源码运行包，需要 Node.js 22+。
+**最新正式版本：[v0.1.4](https://github.com/Yang-goat/codex-usage-monitor/releases/tag/v0.1.4)** · [下载 Windows ZIP](https://github.com/Yang-goat/codex-usage-monitor/releases/download/v0.1.4/codex-usage-monitor-v0.1.4-windows.zip) · [SHA-256 校验文件](https://github.com/Yang-goat/codex-usage-monitor/releases/download/v0.1.4/SHA256SUMS.txt)。ZIP 是源码运行包，需要 Node.js 22+。
 
 ![真实客户端中的状态条](docs/images/status-bar.png)
 
@@ -20,7 +20,7 @@
 
 启动器使用命名互斥锁，辅助进程使用命名管道保证单实例。端口释放最多等待约 20 秒，不自动换端口，也不终止占用者。重启等待旧进程退出后再启动替代进程；保留安装器的自定义端口设置。联动运行时每秒检查客户端 PID，退出清理有 5 秒上限；缺少客户端 PID 的独立运行保留约 12 秒断连宽限。
 
-当前源码与正式发布版本均为 0.1.3。
+点击“检查更新”可对照 GitHub 上的最新正式版本。发现新版时，面板会显示版本号和下载链接。
 
 ## 能做什么
 
@@ -71,7 +71,7 @@ https://github.com/Yang-goat/codex-usage-monitor
 从 [Releases](https://github.com/Yang-goat/codex-usage-monitor/releases/latest) 下载 Windows ZIP 与 `SHA256SUMS.txt`。在 PowerShell 中核对下载的 ZIP：
 
 ```powershell
-Get-FileHash -Algorithm SHA256 .\codex-usage-monitor-v0.1.2-windows.zip
+Get-FileHash -Algorithm SHA256 .\codex-usage-monitor-v0.1.4-windows.zip
 Get-Content .\SHA256SUMS.txt
 ```
 
@@ -179,7 +179,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Uninstall.ps1
 ## 隐私与边界
 
 - 会话日志仅在本机读取，增量解析并保留数值统计，不复制聊天正文到项目。
-- 只有本地 CLI 的额度查询需要访问账号服务；没有遥测、第三方统计服务或上传功能。
+- 本地 CLI 的额度查询访问账号服务。手动检查更新时，辅助进程会向 GitHub 请求公开发布信息。两项功能均无遥测或第三方统计。
 - 调试接口仅绑定回环地址。它允许本机程序控制客户端，请勿转发端口或开放到局域网。
 - 不支持 macOS/Linux 桌面安装；目前只有简体中文界面。工作区或客户端禁用调试能力时无法挂载。
 - 当前适配基于 Windows 商店客户端 `26.1027` 的输入框结构；不同版本需要实际核验。本仓库的源码测试不代表所有客户端版本均兼容。
@@ -193,7 +193,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\scripts.test.ps1
 npm.cmd run preview
 ```
 
-发布前提交全部修改，再运行 `npm.cmd run build:release`。打包脚本从已提交的 Git 源码创建 `dist/release/v<版本>/` 下的 Windows ZIP、`SHA256SUMS.txt` 和本地构建清单；不会打包 `.git/`、未跟踪文件或 `runtime/`。发布说明见 [v0.1.2](docs/releases/v0.1.2.md)，历史变化见 [CHANGELOG](CHANGELOG.md)。
+发布前提交全部修改，再运行 `npm.cmd run build:release`。打包脚本从已提交的 Git 源码创建 `dist/release/v<版本>/` 下的 Windows ZIP、`SHA256SUMS.txt` 和本地构建清单；不会打包 `.git/`、未跟踪文件或 `runtime/`。发布说明见 [v0.1.4](docs/releases/v0.1.4.md)，历史变化见 [CHANGELOG](CHANGELOG.md)。
 
 预览页位于 `http://127.0.0.1:9841`，只使用模拟数据。支持切换 Codex、Work、普通聊天、Dot 和深浅色，不读取真实聊天。界面源码在 `src/renderer.js`；每次改变注入界面时同时更新渲染器版本，运行中的新版辅助进程会检测源文件变化。
 
