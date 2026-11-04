@@ -1,16 +1,26 @@
-# Codex Usage Monitor
+<h1 align="center">Codex Usage Monitor</h1>
 
-[简体中文](README.md) · [English](README.en.md)
+<p align="center">
+  <a href="README.md">简体中文</a> · <a href="README.en.md"><strong>English</strong></a>
+</p>
 
-[![Source checks](https://github.com/Yang-goat/codex-usage-monitor/actions/workflows/check.yml/badge.svg)](https://github.com/Yang-goat/codex-usage-monitor/actions/workflows/check.yml)
-[![GitHub Release](https://img.shields.io/github/v/release/Yang-goat/codex-usage-monitor)](https://github.com/Yang-goat/codex-usage-monitor/releases/latest)
-[![MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+<p align="center">
+  <a href="https://github.com/Yang-goat/codex-usage-monitor/actions/workflows/check.yml"><img src="https://github.com/Yang-goat/codex-usage-monitor/actions/workflows/check.yml/badge.svg" alt="Source checks"></a>
+  <a href="https://github.com/Yang-goat/codex-usage-monitor/releases/latest"><img src="https://img.shields.io/github/v/release/Yang-goat/codex-usage-monitor" alt="GitHub Release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT License"></a>
+</p>
 
-See token usage, context occupancy, and remaining account quota below the main composer in Codex and ChatGPT Work on Windows.
+<p align="center">
+  See token usage, context occupancy, and remaining account quota below the main composer in Codex and ChatGPT Work on Windows.
+</p>
 
-**[Download for Windows](https://github.com/Yang-goat/codex-usage-monitor/releases/latest)** · [Quick start](#quick-start) · [Report an issue](https://github.com/Yang-goat/codex-usage-monitor/issues/new/choose)
+<p align="center">
+  <strong><a href="https://github.com/Yang-goat/codex-usage-monitor/releases/latest">Download for Windows</a></strong> · <a href="#quick-start">Quick start</a> · <a href="https://github.com/Yang-goat/codex-usage-monitor/issues/new/choose">Report an issue</a>
+</p>
 
-![Usage monitor below the Codex composer](docs/images/status-bar.png)
+<p align="center">
+  <img src="docs/images/status-bar.png" alt="Usage monitor below the Codex composer">
+</p>
 
 ## What you can see
 

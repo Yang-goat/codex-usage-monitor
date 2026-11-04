@@ -1,16 +1,26 @@
-# Codex 用量监控
+<h1 align="center">Codex 用量监控</h1>
 
-[简体中文](README.md) · [English](README.en.md)
+<p align="center">
+  <a href="README.md"><strong>简体中文</strong></a> · <a href="README.en.md">English</a>
+</p>
 
-[![Source checks](https://github.com/Yang-goat/codex-usage-monitor/actions/workflows/check.yml/badge.svg)](https://github.com/Yang-goat/codex-usage-monitor/actions/workflows/check.yml)
-[![GitHub Release](https://img.shields.io/github/v/release/Yang-goat/codex-usage-monitor)](https://github.com/Yang-goat/codex-usage-monitor/releases/latest)
-[![MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+<p align="center">
+  <a href="https://github.com/Yang-goat/codex-usage-monitor/actions/workflows/check.yml"><img src="https://github.com/Yang-goat/codex-usage-monitor/actions/workflows/check.yml/badge.svg" alt="Source checks"></a>
+  <a href="https://github.com/Yang-goat/codex-usage-monitor/releases/latest"><img src="https://img.shields.io/github/v/release/Yang-goat/codex-usage-monitor" alt="GitHub Release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT License"></a>
+</p>
 
-在 Windows 版 Codex 和 ChatGPT Work 的主聊天输入框底部，随时查看 token、上下文占用和账号剩余额度。
+<p align="center">
+  在 Windows 版 Codex 和 ChatGPT Work 的主聊天输入框底部，随时查看 token、上下文占用和账号剩余额度。
+</p>
 
-**[下载 Windows 版](https://github.com/Yang-goat/codex-usage-monitor/releases/latest)** · [快速安装](#快速安装) · [交给 AI Agent 安装](docs/AI_AGENT_SETUP.md) · [报告问题](https://github.com/Yang-goat/codex-usage-monitor/issues/new/choose)
+<p align="center">
+  <strong><a href="https://github.com/Yang-goat/codex-usage-monitor/releases/latest">下载 Windows 版</a></strong> · <a href="#快速安装">快速安装</a> · <a href="docs/AI_AGENT_SETUP.md">交给 AI Agent 安装</a> · <a href="https://github.com/Yang-goat/codex-usage-monitor/issues/new/choose">报告问题</a>
+</p>
 
-![Codex 主聊天输入框底部的用量监控](docs/images/status-bar.png)
+<p align="center">
+  <img src="docs/images/status-bar.png" alt="Codex 主聊天输入框底部的用量监控">
+</p>
 
 ## 一眼看清当前用量
 
