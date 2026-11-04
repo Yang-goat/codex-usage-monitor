@@ -4,7 +4,7 @@
 
 目前支持 **Windows 10/11、简体中文界面**，适配 Windows 商店版 Codex。通过本地调试接口临时挂载界面，不改写客户端程序包。
 
-**最新正式版本：[v0.1.2](https://github.com/Yang-goat/codex-usage-monitor/releases/tag/v0.1.2)** · [下载 Windows ZIP](https://github.com/Yang-goat/codex-usage-monitor/releases/download/v0.1.2/codex-usage-monitor-v0.1.2-windows.zip) · [SHA-256 校验文件](https://github.com/Yang-goat/codex-usage-monitor/releases/download/v0.1.2/SHA256SUMS.txt)。ZIP 是源码运行包，需要 Node.js 22+。
+**最新正式版本：[v0.1.3](https://github.com/Yang-goat/codex-usage-monitor/releases/tag/v0.1.3)** · [下载 Windows ZIP](https://github.com/Yang-goat/codex-usage-monitor/releases/download/v0.1.3/codex-usage-monitor-v0.1.3-windows.zip) · [SHA-256 校验文件](https://github.com/Yang-goat/codex-usage-monitor/releases/download/v0.1.3/SHA256SUMS.txt)。ZIP 是源码运行包，需要 Node.js 22+。
 
 ![真实客户端中的状态条](docs/images/status-bar.png)
 
@@ -20,7 +20,7 @@
 
 启动器使用命名互斥锁，辅助进程使用命名管道保证单实例。端口释放最多等待约 20 秒，不自动换端口，也不终止占用者。重启等待旧进程退出后再启动替代进程；保留安装器的自定义端口设置。联动运行时每秒检查客户端 PID，退出清理有 5 秒上限；缺少客户端 PID 的独立运行保留约 12 秒断连宽限。
 
-源码版本为 0.1.3，尚未创建对应 Release；下方下载链接仍指向现有正式版本。
+当前源码与正式发布版本均为 0.1.3。
 
 ## 能做什么
 
