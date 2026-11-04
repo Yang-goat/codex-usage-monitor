@@ -49,6 +49,9 @@ async function stop(f) {
 test('update supervisor rolls back an unstartable version and activates a working version', async t => {
   const f = await fixture(t);
   const port = 19439;
+  const { version } = JSON.parse(await fs.readFile(path.join(f.root, 'package.json'), 'utf8'));
+  const [major, minor, patch] = version.split('.');
+  const nextVersion = `${major}.${minor}.${Number(patch) + 1}`;
   const runtime = path.join(f.root, 'runtime');
   const marker = path.join(runtime, 'active-update.json');
   const restartStatus = () => fs.readFile(path.join(runtime, 'restart-status.json'), 'utf8').then(JSON.parse).catch(() => null);
@@ -57,9 +60,9 @@ test('update supervisor rolls back an unstartable version and activates a workin
     const app = path.join(runtime, 'updates', slot, 'app');
     await fs.mkdir(app, { recursive: true });
     await fs.cp(path.join(f.root, 'src'), path.join(app, 'src'), { recursive: true });
-    await fs.writeFile(path.join(app, 'package.json'), JSON.stringify({ name: 'codex-usage-monitor', version: '0.1.5' }));
+    await fs.writeFile(path.join(app, 'package.json'), JSON.stringify({ name: 'codex-usage-monitor', version: nextVersion }));
     if (broken) await fs.writeFile(path.join(app, 'src', 'main.mjs'), 'throw Error("simulated startup failure");');
-    return { slot, tag: 'v0.1.5' };
+    return { slot, tag: `v${nextVersion}` };
   }
   async function handoff(selection, state) {
     const old = await f.metadata();
@@ -78,12 +81,12 @@ test('update supervisor rolls back an unstartable version and activates a workin
   await handoff(await addSlot('u-broken', true), 'update-rolled-back');
   assert.equal(await fs.stat(marker).catch(() => null), null);
   await handoff(await addSlot('u-good00', false), 'updated');
-  assert.equal((await status()).version, '0.1.5');
+  assert.equal((await status()).version, nextVersion);
   assert.equal(JSON.parse(await fs.readFile(marker, 'utf8')).slot, 'u-good00');
   await stop(f);
   f.start(port);
   await until(async () => (await probeInstance(f.root))?.state === 'running');
-  assert.equal((await status()).version, '0.1.5');
+  assert.equal((await status()).version, nextVersion);
   await stop(f);
 });
 

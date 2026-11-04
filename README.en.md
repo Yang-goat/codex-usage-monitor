@@ -44,7 +44,7 @@ The status bar image comes from the desktop client. The settings image uses samp
 
 ```powershell
 # In the download directory, substitute your ZIP's actual filename.
-Get-FileHash -Algorithm SHA256 .\codex-usage-monitor-v0.1.4-windows.zip
+Get-FileHash -Algorithm SHA256 .\codex-usage-monitor-v0.1.5-windows.zip
 Get-Content .\SHA256SUMS.txt
 
 # From the extracted project directory.

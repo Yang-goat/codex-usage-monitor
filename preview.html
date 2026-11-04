@@ -18,7 +18,7 @@ function simulateUpdateCheck(result){
 window.__codexMeterControl=payload=>{
   const command=JSON.parse(payload);
   window.previewLastControl=command;
-  if(command.action==='check-update')simulateUpdateCheck({state:'available',tag:'v0.1.5',installable:true});
+  if(command.action==='check-update')simulateUpdateCheck({state:'available',tag:'v0.1.6',installable:true});
   else if(command.action==='update'){
     previewSample.release={...previewSample.release,state:'updating'};
     window.__codexComposerMeter.update(previewSample);

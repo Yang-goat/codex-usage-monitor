@@ -1,6 +1,6 @@
 // Runs only in the local Codex renderer; no remote scripts or network requests.
 (() => {
-  const version='0.1.4';
+  const version='0.1.5';
   const revision=5;
   const installed=window.__codexComposerMeter?.state();
   if (installed?.version===version && installed.revision===revision) return;
