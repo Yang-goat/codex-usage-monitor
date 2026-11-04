@@ -1,7 +1,7 @@
 // Runs only in the local Codex renderer; no remote scripts or network requests.
 (() => {
   const version='0.1.4';
-  const revision=4;
+  const revision=5;
   const installed=window.__codexComposerMeter?.state();
   if (installed?.version===version && installed.revision===revision) return;
   window.__codexComposerMeter?.destroy();
@@ -12,7 +12,8 @@
       tokenDetails:'当前聊天 · Token 明细', cacheTip:'累计缓存输入 ÷ 累计输入', contextDetails:'上下文实际数值',
       total:'累计 token', input:'输入 token', output:'输出 token', reasoning:'推理 token', cached:'缓存输入 token',
       used:'已用 token', remaining:'剩余 token', window:'窗口上限',
-      check:'检查更新', checkFull:'检查更新', download:'前往 GitHub 下载',
+      check:'检查更新', download:'前往 GitHub 下载',
+      install:'自动更新', updating:'正在更新…', updateFailed:'更新失败，可重试',
       helper:'辅助进程', pid:'进程 PID', port:'调试端口', clientPid:'客户端 PID', connection:'连接状态', uptime:'运行时间',
       connected:'已连接', waiting:'等待连接', stop:'立即关闭', restart:'重启',
       stopping:'正在关闭状态条…', restarting:'正在重启状态条…', sendFailed:'操作未发送，请稍后重试。',
@@ -30,7 +31,8 @@
       tokenDetails:'Chat token usage', cacheTip:'Cached input ÷ total input', contextDetails:'Context usage',
       total:'Total tokens', input:'Input tokens', output:'Output tokens', reasoning:'Reasoning tokens', cached:'Cached input',
       used:'Tokens used', remaining:'Tokens left', window:'Window size',
-      check:'Check for updates', checkFull:'Check for updates', download:'Download on GitHub',
+      check:'Check for updates', download:'Download on GitHub',
+      install:'Auto-update', updating:'Updating…', updateFailed:'Update failed. Retry.',
       helper:'Helper', pid:'Helper PID', port:'Debug port', clientPid:'Client PID', connection:'Connection', uptime:'Uptime',
       connected:'Connected', waiting:'Connecting', stop:'Stop now', restart:'Restart',
       stopping:'Stopping the monitor…', restarting:'Restarting the monitor…', sendFailed:'Could not send command. Try again.',
@@ -108,7 +110,7 @@
         <select disabled><option value="zh-CN" lang="zh-CN">简体中文</option><option value="en-US" lang="en-US">English</option></select>
       </label>
       <div class="update-control">
-        <button type="button" data-action="check-update" data-text="check" data-label="checkFull" data-tooltip="checkFull" disabled></button>
+        <button type="button" class="update-button" disabled></button>
         <div class="update-feedback" role="status" aria-live="polite"></div>
         <a class="update-link" target="_blank" rel="noopener noreferrer" data-text="download" hidden></a>
       </div>
@@ -136,7 +138,7 @@
   const feedback=shadow.querySelector('.process-feedback');
   const updateFeedback=shadow.querySelector('.update-feedback');
   const updateLink=shadow.querySelector('.update-link');
-  const updateButton=shadow.querySelector('[data-action="check-update"]');
+  const updateButton=shadow.querySelector('.update-button');
   const language=shadow.querySelector('.language-control select');
   let pendingLocale=null, localeDeadline=0, controlMessage='';
   function applyLocale(next) {
@@ -163,19 +165,25 @@
     }
     paint();
   });
-  for(const button of shadow.querySelectorAll('[data-action]'))button.addEventListener('click',()=>{
+  function canInstall(release) {
+    return release?.installable&&['available','update-error'].includes(release.state);
+  }
+  updateButton.addEventListener('click',()=>{
+    if(!canSend()||updateButton.disabled)return;
+    const release=data.release;
+    const install=canInstall(release);
+    data.release=install?{...release,state:'updating'}:{state:'checking'};
+    try{send({action:install?'update':'check-update'});}
+    catch{data.release=install?{...release,state:'update-error'}:{state:'error'};}
+    paint();
+  });
+  for(const button of shadow.querySelectorAll('.process-actions button'))button.addEventListener('click',()=>{
     if(!canSend())return;
     const action=button.dataset.action;
-    if(action==='check-update')data.release={state:'checking'};
-    else {
-      controlPending=true;
-      controlMessage=action==='restart'?'restarting':'stopping';
-    }
+    controlPending=true;
+    controlMessage=action==='restart'?'restarting':'stopping';
     try{send({action});}
-    catch{
-      if(action==='check-update')data.release={state:'error'};
-      else{controlPending=false;controlMessage='sendFailed';}
-    }
+    catch{controlPending=false;controlMessage='sendFailed';}
     paint();
   });
   const norm = x => typeof x === 'string' ? x.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i)?.[0]?.toLowerCase() ?? null : null;
@@ -291,17 +299,24 @@
     language.disabled=!canControl||!supported(data?.locale)||pendingLocale!==null;
     const feedbackText=t(controlMessage)??controlMessage;
     if(feedback.textContent!==feedbackText)feedback.textContent=feedbackText;
-    for(const button of shadow.querySelectorAll('.process-actions button'))button.disabled=!canControl;
     const release=data?.release;
     const checking=release?.state==='checking';
+    const updating=release?.state==='updating';
+    const failed=release?.state==='update-error';
     const updateAvailable=release?.state==='available';
+    for(const button of shadow.querySelectorAll('.process-actions button'))button.disabled=!canControl||updating;
     let message=t(release?.state)??'';
     if(checking)message=t(fresh?'checking':'disconnected');
     if(updateAvailable)message=`${t('available')} ${release.tag}`;
+    if(failed)message=t('updateFailed');
+    if(updating)message=release.tag??'';
     if(updateFeedback.textContent!==message)updateFeedback.textContent=message;
-    updateButton.disabled=!canControl||checking;
-    updateLink.hidden=!updateAvailable;
-    if(updateAvailable)updateLink.href=`https://github.com/Yang-goat/codex-usage-monitor/releases/tag/${encodeURIComponent(release.tag)}`;
+    const updateLabel=updating?t('updating'):canInstall(release)?t('install'):t('check');
+    if(updateButton.textContent!==updateLabel)updateButton.textContent=updateLabel;
+    updateButton.title=updateLabel;
+    updateButton.disabled=!canControl||checking||updating;
+    updateLink.hidden=!updateAvailable&&!failed;
+    if((updateAvailable||failed)&&release.tag)updateLink.href=`https://github.com/Yang-goat/codex-usage-monitor/releases/tag/${encodeURIComponent(release.tag)}`;
     const bar=shadow.querySelector('.bar'), available=root.getBoundingClientRect().width;
     bar.style.fontSize='10.5px';bar.style.gap='7px';
     if(available>0&&bar.scrollWidth>available+1){bar.style.fontSize='9px';bar.style.gap='4px';}

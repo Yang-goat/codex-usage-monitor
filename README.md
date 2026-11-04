@@ -100,7 +100,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install.ps1 `
 2. 双击安装时接入或创建的桌面图标。Codex 和辅助进程会一起启动，辅助进程没有单独窗口。
 3. 打开 Codex 聊天或 ChatGPT Work。第一次没有已完成的模型调用时，部分统计可能为 `—`。
 4. 点击 token 数值或“上下文”查看明细；额度与重置时间也有悬停信息。
-5. 点击齿轮，在「界面语言」选择简体中文或 English。辅助进程启动时自动检查更新，也可手动重查。发现新版时会给出对应的下载链接。
+5. 点击齿轮，在「界面语言」选择简体中文或 English。辅助进程启动时自动检查更新，也可手动重查。发现带可校验 Windows 包的新版后，按钮变为「自动更新」。点击才下载和安装，仍可打开对应 Release。
 6. 完全退出客户端后，辅助进程自动结束。只隐藏窗口到托盘时，客户端仍在运行，辅助进程也继续待命。
 
 **启动联动针对安装器处理的 `.lnk` 图标。** 开始菜单中的内置应用项、旧的任务栏入口、协议链接或直接运行客户端可能不带调试参数。若已通过这些入口打开，请正常退出后从接入的图标重开。监控不会强制终止客户端。
@@ -124,7 +124,9 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install.ps1 `
 
 ## 更新与卸载
 
-更新前先退出 Codex，保留 `runtime/`：它包含原快捷方式备份和安装记录。通过 Git 安装的用户可在原目录更新：
+使用支持自动更新的版本时，点击「自动更新」会校验 GitHub 正式发布包的 SHA-256，并只重启状态条辅助进程。新版启动后才保存切换结果，失败时恢复原版。更新包解压到 `runtime/updates/`，桌面入口、Git 工作区和语言设置继续保留。
+
+手动更新前请退出 Codex 并保留 `runtime/`。通过 Git 安装的用户可在原目录更新：
 
 ```powershell
 git status
@@ -178,7 +180,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\scripts.test.ps1
 npm.cmd run preview
 ```
 
-发布前提交全部修改，再运行 `npm.cmd run build:release`。打包脚本从已提交的 Git 源码创建 `dist/release/v<版本>/` 下的 Windows ZIP、`SHA256SUMS.txt` 和本地构建清单；不会打包 `.git/`、未跟踪文件或 `runtime/`。发布说明见 [v0.1.4](docs/releases/v0.1.4.md)，历史变化见 [CHANGELOG](CHANGELOG.md)。
+发布前提交全部修改，再运行 `npm.cmd run build:release`。打包脚本从已提交的 Git 源码创建 `dist/release/v<版本>/` 下的 Windows ZIP、`SHA256SUMS.txt` 和本地构建清单。ZIP 仅包含运行源码、安装及启动脚本、`package.json`、许可证和 [简明安装说明](INSTALL.md)。发布说明见 [v0.1.4](docs/releases/v0.1.4.md)，历史变化见 [CHANGELOG](CHANGELOG.md)。
 
 预览页位于 `http://127.0.0.1:9841`，只使用模拟数据。支持切换 Codex、Work、普通聊天和深浅色，不读取真实聊天。界面源码在 `src/renderer.js`；每次改变注入界面时同时更新渲染器版本，运行中的新版辅助进程会检测源文件变化。
 

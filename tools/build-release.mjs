@@ -21,8 +21,9 @@ await fs.mkdir(output,{recursive:true});
 const filename=`${prefix}-windows.zip`;
 const archive=path.join(output,filename);
 const checksum=path.join(output,'SHA256SUMS.txt');
-// git archive includes tracked source only: runtime, credentials and .git stay out.
-git('archive','--format=zip',`--prefix=${prefix}/`,`--output=${archive}`,'HEAD');
+// The runtime package has no npm dependencies. Keep development files and screenshots on GitHub.
+const distribution=['package.json','src','scripts','LICENSE','INSTALL.md'];
+git('archive','--format=zip',`--prefix=${prefix}/`,`--output=${archive}`,'HEAD','--',...distribution);
 const sha256=createHash('sha256').update(await fs.readFile(archive)).digest('hex');
 await fs.writeFile(checksum,`${sha256}  ${filename}\n`,'utf8');
 const manifest={version,tag,commit:git('rev-parse','HEAD'),archive:filename,sha256,node:engines.node};

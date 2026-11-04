@@ -58,14 +58,16 @@ You can also clone the [repository](https://github.com/Yang-goat/codex-usage-mon
 
 - Open a main chat in Codex or ChatGPT Work. The monitor stays hidden in side chats, regular ChatGPT chats, and Dot. It also hides when the composer runs out of room.
 - Click the token count or context metric for details and hover for the exact values. Press Esc or click outside to close a panel.
-- Open the gear and choose **English** under **Language**. Update checks run when the helper starts, with a manual check in settings. A newer stable version comes with a link to its release page.
+- Open the gear and choose **English** under **Language**. Update checks run when the helper starts, with a manual check in settings. When a newer stable version has a verifiable Windows package, the button changes to **Auto-update**. Click it to install, or follow the release link.
 - **Stop now** and **Restart** control the helper. Fully quitting Codex also stops the helper.
 
 Usage numbers update as local log events arrive. Chats without a local log may show `—`. Account quota is shared across chats on the same account.
 
 ## Updating and uninstalling
 
-Fully quit Codex before updating and keep the existing installation's `runtime/` directory, which contains the shortcut backup and installation record.
+In builds with auto-update, the helper verifies the official Windows package using SHA-256. It switches versions after the replacement helper starts and restores the previous helper if startup fails. The update is extracted to `runtime/updates/`, preserving the desktop shortcut, Git checkout, and language preference.
+
+For manual updates, fully quit Codex first and keep the existing installation's `runtime/` directory.
 
 - **Git** — Check `git status`, run `git pull --ff-only` in the existing directory, and run the installer again.
 - **ZIP** — Uninstall from the old directory, verify and extract the new ZIP, and follow the quick start steps.
@@ -99,7 +101,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\scripts.test.ps1
 npm.cmd run preview
 ```
 
-The preview at `http://127.0.0.1:9841` uses sample data. See the [changelog](CHANGELOG.md) for release history. Run `npm.cmd run build:release` to package the committed Git source.
+The preview at `http://127.0.0.1:9841` uses sample data. See the [changelog](CHANGELOG.md) for release history. Run `npm.cmd run build:release` to package the runtime source, Windows scripts, `package.json`, license, and [offline installation guide](INSTALL.md).
 
 ## Credits and license
 

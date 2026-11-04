@@ -25,8 +25,8 @@ async function fixture(t) {
   await fs.mkdir(path.join(root, 'runtime'));
   await fs.mkdir(path.join(root, 'home', 'sessions'), { recursive: true });
   const children = [];
-  const start = (port, extra = {}) => {
-    const child = spawn(process.execPath, [path.join(root, 'src', 'main.mjs')], {
+  const start = (port, extra = {}, [script, ...args] = ['main.mjs']) => {
+    const child = spawn(process.execPath, [path.join(root, 'src', script), ...args], {
       windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'],
       env: { ...process.env, NODE_OPTIONS: [process.env.NODE_OPTIONS, mockReleaseFetch].filter(Boolean).join(' '), CODEX_METER_RUNTIME: '', CODEX_HOME: path.join(root, 'home'), CODEX_METER_PORT: String(port), CODEX_METER_CLIENT_PID: '', ...extra },
     });
@@ -45,6 +45,47 @@ async function stop(f) {
   await probeInstance(f.root, { action: 'stop', token: metadata.token });
   await until(async () => !(await probeInstance(f.root)));
 }
+
+test('update supervisor rolls back an unstartable version and activates a working version', async t => {
+  const f = await fixture(t);
+  const port = 19439;
+  const runtime = path.join(f.root, 'runtime');
+  const marker = path.join(runtime, 'active-update.json');
+  const restartStatus = () => fs.readFile(path.join(runtime, 'restart-status.json'), 'utf8').then(JSON.parse).catch(() => null);
+  const status = () => fs.readFile(path.join(runtime, 'status.json'), 'utf8').then(JSON.parse).catch(() => null);
+  async function addSlot(slot, broken) {
+    const app = path.join(runtime, 'updates', slot, 'app');
+    await fs.mkdir(app, { recursive: true });
+    await fs.cp(path.join(f.root, 'src'), path.join(app, 'src'), { recursive: true });
+    await fs.writeFile(path.join(app, 'package.json'), JSON.stringify({ name: 'codex-usage-monitor', version: '0.1.5' }));
+    if (broken) await fs.writeFile(path.join(app, 'src', 'main.mjs'), 'throw Error("simulated startup failure");');
+    return { slot, tag: 'v0.1.5' };
+  }
+  async function handoff(selection, state) {
+    const old = await f.metadata();
+    const supervisor = f.start(port, {}, ['restart.mjs', String(old.pid), JSON.stringify(selection)]);
+    await probeInstance(f.root, { action: 'stop', token: old.token });
+    await until(() => supervisor.exitCode !== null, 18000);
+    assert.equal(supervisor.exitCode, 0, supervisor.output);
+    assert.equal((await restartStatus()).state, state);
+    const current = await probeInstance(f.root);
+    assert.equal(current?.state, 'running');
+    assert.notEqual(current.pid, old.pid);
+  }
+  f.start(port);
+  await until(async () => (await probeInstance(f.root))?.state === 'running');
+  t.after(async () => { if (await probeInstance(f.root)) await stop(f); });
+  await handoff(await addSlot('u-broken', true), 'update-rolled-back');
+  assert.equal(await fs.stat(marker).catch(() => null), null);
+  await handoff(await addSlot('u-good00', false), 'updated');
+  assert.equal((await status()).version, '0.1.5');
+  assert.equal(JSON.parse(await fs.readFile(marker, 'utf8')).slot, 'u-good00');
+  await stop(f);
+  f.start(port);
+  await until(async () => (await probeInstance(f.root))?.state === 'running');
+  assert.equal((await status()).version, '0.1.5');
+  await stop(f);
+});
 
 test('concurrent helpers: one owner; duplicate cannot overwrite or remove its metadata', async t => {
   const f = await fixture(t);
