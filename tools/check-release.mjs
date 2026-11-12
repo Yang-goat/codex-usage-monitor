@@ -14,7 +14,7 @@ async function walk(dir){
   if(entry.isDirectory()){await walk(file);continue;}
   count++;
   if(/\.(lnk|sqlite|db|pem|key|jsonl|log)$/i.test(entry.name)||/^\.env(?:\.|$)/.test(entry.name)||entry.name==='auth.json')failures.push(`${rel}: 不应发布本机资料`);
-  if(!/\.(md|js|mjs|json|ps1|yml|svg)$/.test(entry.name))continue;
+  if(!/\.(md|js|mjs|json|ps1|cs|yml|svg)$/.test(entry.name))continue;
   const buffer=await fs.readFile(file),text=buffer.toString('utf8');
   if(/\b[A-Z]:[\\/]Users[\\/](?:admin|Administrator)[\\/]/i.test(text)||/\bE:[\\/]project[\\/]00_Inbox/i.test(text))failures.push(`${rel}: 包含开发机路径`);
   if(/\bgh[pousr]_[A-Za-z0-9]{25,}\b/.test(text)||/\bsk-(?:proj-)?[A-Za-z0-9_-]{30,}/.test(text))failures.push(`${rel}: 可能包含凭据`);

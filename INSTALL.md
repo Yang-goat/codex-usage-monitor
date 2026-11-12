@@ -26,3 +26,9 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Uninstall.ps1
 ```
 
 保留 `runtime/`，其中存放快捷方式备份和语言设置。Keep `runtime/` for the shortcut backup and language preference.
+
+## 图标修复 / Taskbar icons
+
+从监控快捷方式启动时自动修复任务栏图标；窗口重建后继续生效。安装器将桌面图标保存在 runtime/icons/，保留该目录。开机自启设置不变。
+
+Starting through the monitor shortcut repairs taskbar icons, including recreated windows. Keep runtime/icons/, which holds the cached desktop shortcut icon. Windows sign-in startup settings are unchanged.

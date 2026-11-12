@@ -29,6 +29,12 @@ $previousRuntime=$env:CODEX_METER_RUNTIME
 try {
     $env:CODEX_METER_RUNTIME=$script:MonitorRuntime
     Invoke-MeterLauncher -Root $script:MonitorRoot -Context $context
+    # Cosmetic repair must never prevent the monitor from starting.
+    try {
+        . (Join-Path $PSScriptRoot 'WindowIcon.ps1')
+        $endpoint = Get-MeterEndpoint $context
+        Start-MeterWindowIcon $context $endpoint $client
+    } catch { Write-Warning ('Taskbar icon: ' + $_.Exception.Message) }
 } finally {
     $env:CODEX_METER_RUNTIME=$previousRuntime
 }

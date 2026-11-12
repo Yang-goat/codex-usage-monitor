@@ -32,7 +32,7 @@ function Get-MonitorClient {
     }
     $icon = Join-Path (Split-Path $exe -Parent) 'resources\icon-chatgpt.ico'
     if (-not (Test-Path -LiteralPath $icon)) { $icon = $exe }
-    return [pscustomobject]@{ Exe=$exe; Icon=$icon; PackageFamily=if($package){$package.PackageFamilyName}else{$null} }
+    return [pscustomobject]@{ Exe=$exe; Icon=$icon; PackageFamily=if($package -and $exe.StartsWith($package.InstallLocation + '\',[StringComparison]::OrdinalIgnoreCase)){$package.PackageFamilyName}else{$null} }
 }
 
 function Get-MonitorNode {
@@ -61,4 +61,17 @@ function Get-MonitorCli {
     $bundled = Join-Path (Split-Path $ClientExe -Parent) 'resources\codex.exe'
     if (Test-Path -LiteralPath $bundled -PathType Leaf) { return $bundled }
     return $null
+}
+
+function Get-MonitorStableIcon {
+    param($Client)
+    if ([IO.Path]::GetExtension($Client.Icon) -ne '.ico') { return $Client.Icon }
+    $directory = Join-Path $script:MonitorRuntime 'icons'
+    New-Item -ItemType Directory -Path $directory -Force | Out-Null
+    $hash = (Get-FileHash -LiteralPath $Client.Icon -Algorithm SHA256).Hash
+    $destination = Join-Path $directory ($hash + '.ico')
+    if (-not (Test-Path -LiteralPath $destination) -or (Get-FileHash -LiteralPath $destination -Algorithm SHA256).Hash -ne $hash) {
+        Copy-Item -LiteralPath $Client.Icon -Destination $destination -Force
+    }
+    return $destination
 }

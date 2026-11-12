@@ -45,7 +45,7 @@ $link.TargetPath = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\po
 $link.Arguments = '-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "' + (Join-Path $PSScriptRoot 'Start.ps1') + '"'
 $link.WorkingDirectory = $script:MonitorRoot
 $link.WindowStyle = 7
-$link.IconLocation = $client.Icon
+$link.IconLocation = Get-MonitorStableIcon $client
 $link.Description = 'Codex；自动加载用量监控，完全退出客户端后辅助进程自动退出。'
 $link.Save()
 if (Test-Path -LiteralPath $ShortcutPath) {

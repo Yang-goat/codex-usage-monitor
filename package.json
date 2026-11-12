@@ -1,6 +1,6 @@
 {
   "name": "codex-usage-monitor",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "private": true,
   "description": "在 Codex 和 ChatGPT Work 输入框中显示聊天 token、上下文占用与账号额度。",
   "license": "MIT",

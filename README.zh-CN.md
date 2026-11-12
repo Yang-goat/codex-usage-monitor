@@ -35,6 +35,10 @@
 
 中英文截图均来自当前源码的本地预览，使用相同的模拟数据。稳定版功能见对应 [Release 说明](https://github.com/Yang-goat/codex-usage-monitor/releases/latest)。
 
+### 任务栏图标
+
+启动器会修复空白任务栏图标，并在窗口重建后自动恢复。安装时将快捷方式图标缓存到本机 runtime/icons/，避免商店更新后旧安装路径失效。每个客户端进程只有一个隐藏图标辅助进程，并随客户端退出。该修复通过监控快捷方式启动时生效；Windows 开机自启设置保持不变。
+
 ## 环境要求
 
 | 项目 | 要求 |
@@ -53,7 +57,7 @@
 从 [Releases](https://github.com/Yang-goat/codex-usage-monitor/releases/latest) 下载 Windows ZIP 与 `SHA256SUMS.txt`。在 PowerShell 中核对下载的 ZIP：
 
 ```powershell
-Get-FileHash -Algorithm SHA256 .\codex-usage-monitor-v0.1.5-windows.zip
+Get-FileHash -Algorithm SHA256 .\codex-usage-monitor-v0.1.6-windows.zip
 Get-Content .\SHA256SUMS.txt
 ```
 
@@ -180,7 +184,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\scripts.test.ps1
 npm.cmd run preview
 ```
 
-发布前提交全部修改，再运行 `npm.cmd run build:release`。打包脚本从已提交的 Git 源码创建 `dist/release/v<版本>/` 下的 Windows ZIP、`SHA256SUMS.txt` 和本地构建清单。ZIP 仅包含运行源码、安装及启动脚本、`package.json`、许可证和 [简明安装说明](INSTALL.md)。发布说明见 [v0.1.5](docs/releases/v0.1.5.md)，历史变化见 [CHANGELOG](CHANGELOG.md)。
+发布前提交全部修改，再运行 `npm.cmd run build:release`。打包脚本从已提交的 Git 源码创建 `dist/release/v<版本>/` 下的 Windows ZIP、`SHA256SUMS.txt` 和本地构建清单。ZIP 仅包含运行源码、安装及启动脚本、`package.json`、许可证和 [简明安装说明](INSTALL.md)。发布说明见 [v0.1.6](docs/releases/v0.1.6.md)，历史变化见 [CHANGELOG](CHANGELOG.md)。
 
 预览页位于 `http://127.0.0.1:9841`，只使用模拟数据。支持切换 Codex、Work、普通聊天和深浅色，不读取真实聊天。界面源码在 `src/renderer.js`；每次改变注入界面时同时更新渲染器版本，运行中的新版辅助进程会检测源文件变化。
 

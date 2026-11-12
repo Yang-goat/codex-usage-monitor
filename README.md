@@ -35,6 +35,10 @@
 
 Both languages show the same sample data in the local preview of the current source. See the [latest release notes](https://github.com/Yang-goat/codex-usage-monitor/releases/latest) for features in the stable version.
 
+### Taskbar icons
+
+The launcher restores blank taskbar icons and maintains them when desktop windows are recreated. Installation caches the shortcut icon under `runtime/icons/` so Store upgrades do not invalidate its file path. One hidden icon helper runs per desktop process and exits with it. This applies when using the monitor shortcut; Windows sign-in startup settings are unchanged.
+
 ## Requirements
 
 | Item | Requirement |
@@ -53,7 +57,7 @@ To have an agent configure the monitor, copy the [AI agent installation prompt](
 Download the Windows ZIP and `SHA256SUMS.txt` from [Releases](https://github.com/Yang-goat/codex-usage-monitor/releases/latest). Verify the downloaded ZIP in PowerShell.
 
 ```powershell
-Get-FileHash -Algorithm SHA256 .\codex-usage-monitor-v0.1.5-windows.zip
+Get-FileHash -Algorithm SHA256 .\codex-usage-monitor-v0.1.6-windows.zip
 Get-Content .\SHA256SUMS.txt
 ```
 
@@ -180,7 +184,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\scripts.test.ps1
 npm.cmd run preview
 ```
 
-Commit all changes before running `npm.cmd run build:release`. The build script uses committed Git source to create a Windows ZIP, `SHA256SUMS.txt`, and a local build manifest in `dist/release/v<version>/`. The ZIP contains runtime source, installation and startup scripts, `package.json`, the license, and the [installation guide](INSTALL.md). See the [v0.1.5 notes](docs/releases/v0.1.5.md) and [changelog](CHANGELOG.md).
+Commit all changes before running `npm.cmd run build:release`. The build script uses committed Git source to create a Windows ZIP, `SHA256SUMS.txt`, and a local build manifest in `dist/release/v<version>/`. The ZIP contains runtime source, installation and startup scripts, `package.json`, the license, and the [installation guide](INSTALL.md). See the [v0.1.6 notes](docs/releases/v0.1.6.md) and [changelog](CHANGELOG.md).
 
 The preview at `http://127.0.0.1:9841` uses sample data. Switch between Codex, Work, and regular chat or toggle light and dark themes. The UI source is in `src/renderer.js`. Update the renderer version with each change to the injected UI so a running helper can detect source changes.
 
